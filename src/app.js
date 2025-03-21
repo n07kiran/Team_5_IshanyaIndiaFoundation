@@ -1,6 +1,8 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import StudentRouter from "./routes/StudentRoutes.js"
+import EmployeeRouter from "./routes/EmployeeRouter.js"
  
 
 const app = express()
@@ -20,9 +22,8 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 //routes
-import userRouter from "./routes/user.routes.js"
-
-app.use("/api/v1/users",userRouter)
+app.use("/api/v1/parent",StudentRouter);
+app.use("/api/v1/employee",EmployeeRouter);
 
 //http://localhost:8000/api/v1/users/register
 

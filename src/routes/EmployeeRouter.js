@@ -1,22 +1,19 @@
 import { Router } from "express";
-import { registerEmployee, loginEmployee, logoutEmployee, refreshAccessToken } from "../controllers/EmployeeController.js";
+import { registerEmployee, loginEmployee, logoutEmployee } from "../controllers/EmployeeController.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = Router();
+const EmployeeRouter = Router();
 
-router.post(
+EmployeeRouter.post(
     "/register",
-    upload.fields([
-        { name: "photo", maxCount: 1 }
-    ]),
     registerEmployee
 );
 
-router.post("/login", loginEmployee);
+EmployeeRouter.post("/login", loginEmployee);
 
 // Secured routes
-router.post("/logout", verifyJWT, logoutEmployee);
-router.post("/refresh-token", refreshAccessToken);
+EmployeeRouter.post("/logout", verifyJWT, logoutEmployee);
+// EmployeeRouter.post("/refresh-token", refreshAccessToken);
 
-export default router;
+export default EmployeeRouter;

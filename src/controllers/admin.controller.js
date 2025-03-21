@@ -1,98 +1,62 @@
-const generateAccessAndRefreshTokens = async (userId) => {
-    try{
-        const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+import { Employee } from "../models/Employee.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
 
-        user.refreshToken = refreshToken
-        await user.save( { validateBeforeSave : false })
+const loginAdmin = asyncHandler(async (req, res, next) => {
 
-        return {accessToken,refreshToken}
-    }catch(error){
-        throw new ApiError(500,"Something went wrong while generating refresh and access token")
-    }
-}
+    // make it for both email and emplyoeID -> Do it chatgpt
+    const { email, password } = req.body;
 
-const loginUser = asyncHandler(async (req,res,next)=>{
-    // 1. get the username and password from the frontend : req.body -> data
-    // 2. search for existing user and compare the password : username or email , 
-    // 3. if true : generate access and refresh token and send it in secure cookies
-    // 4. if false : inValid
-    // 5. send response
-
-    const {username,email,password} = req.body
-
-    if(!username && !email){
-        throw new ApiError(400,"Username or email is required!")
+    if (!email) {
+        throw new ApiError(400, "Email is required!");
     }
 
-    const user = await User.findOne({
-        $or : [{email : email},{username: username}]
-    })
+    const employee = await Employee.findOne({ email });
 
-    if(!user){
-        throw new ApiError(404,"User does not exist")
+    if (!employee) {
+        throw new ApiError(404, "Admin does not exist");
     }
 
-    const isPasswordValid = await user.isPasswordCorrect(password)
-
-    if(!isPasswordValid){
-        throw new ApiError(401,"Invalid user credentials!")
+    if (employee.designation.title != 'Admin'){
+        throw new ApiError(404, "UnAuthorized Employee")
     }
-    // console.log("Valid Password!")
 
-    const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id)
+    const isPasswordValid = await employee.isPasswordCorrect(password);
 
-    // console.log({accessToken : accessToken , refreshToken : refreshToken})
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid Admin credentials!");
+    }
+
+    const accessToken = await employee.generateAccessToken();
+
+    const cookieOptions = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .json(
+            new ApiResponse(
+                200,
+                { employee: employee.email, accessToken },
+                "Admin logged in successfully"
+            )
+        );
+});
+
+const logoutAdmin = asyncHandler(async (req, res, next) => {
+    await Employee.findByIdAndUpdate(
+        req.user._id,
+        { new: true }
+    );
     
-    const loggedInUser = await User.findById(user._id).select({password:0,refreshToken:0})
-
-    const cookieOptions = {
-        httpOnly : true,
-        secure : true
-    }
-
     return res
-    .status(200)
-    .cookie("accessToken",accessToken,cookieOptions)
-    .cookie("refreshToken",refreshToken,cookieOptions)
-    .json(
-        new ApiResponse(
-            200,
-            {
-                user : loggedInUser,accessToken,refreshToken
-            },
-            "User logged In Successfully"
+        .status(200)
+        .clearCookie("accessToken")
+        .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
+});
 
-        )
-    )
-
-
-})
-
-const logoutUser = asyncHandler(async (req,res,next)=>{
-    await User.findByIdAndUpdate(req.user._id,
-        {
-            $set : {
-                refreshToken : ""
-            }
-        },
-        {
-            new : true
-        })
-
-
-    const cookieOptions = {
-        httpOnly : true,
-        secure : true
-    }
-
-    return res
-    .status(200)
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
-    .json(
-        new ApiResponse(200,{user : req.user.username   },"User logged out!")
-    )
-
-})
+export { loginEmployee, logoutEmployee };

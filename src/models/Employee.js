@@ -1,6 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { generateHashedPasswordSync } from "../utils/Password.js";
+import { DEFAULT_PASSWORD } from "../constants.js";
 
 const employeeSchema = new Schema(
     {
@@ -78,9 +80,9 @@ const employeeSchema = new Schema(
                 ref: "Program"
             }
         ],
-        password: {
-            type: String,
-            required: true
+        password:{
+            type:String,
+            default: generateHashedPasswordSync(DEFAULT_PASSWORD)
         }
     },
     {
@@ -104,23 +106,12 @@ employeeSchema.methods.generateAccessToken = function () {
             _id: this._id,
             email: this.email,
             firstName: this.firstName,
-            lastName: this.lastName
+            employeeID: this.employeeID,
+            designation: this.designation.title
         },
         process.env.ACCESS_TOKEN_SECRET_KEY,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-        }
-    );
-};
-
-employeeSchema.methods.generateRefreshToken = function () {
-    return jwt.sign(
-        {
-            _id: this._id,
-        },
-        process.env.REFRESH_TOKEN_SECRET_KEY,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     );
 };

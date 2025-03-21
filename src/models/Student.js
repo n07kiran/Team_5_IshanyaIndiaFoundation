@@ -1,8 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { generateHashedPasswordSync } from "../utils/Password";
+import { DEFAULT_PASSWORD } from "../constants";
 
 const studentSchema = new Schema(
     {
-        studentID: {
+        studentId: {
             type: String,
             required: true,
             unique: true,
@@ -111,12 +113,42 @@ const studentSchema = new Schema(
             type: String,
             enum: ["Active", "Inactive"],
             default: "Active"
+        },
+        password:{
+            type:String,
+            default : generateHashedPasswordSync(DEFAULT_PASSWORD)
         }
     },
     {
         timestamps: true
     }
 );
+
+studentSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+});
+
+studentSchema.methods.isPasswordCorrect = async function (password) {
+    return await bcrypt.compare(password, this.password);
+};
+
+studentSchema.methods.generateAccessToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+            email: this.email,
+            firstName: this.firstName,
+            studentID: this.studentID,
+            designation: "Student"
+        },
+        process.env.ACCESS_TOKEN_SECRET_KEY,
+        {
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+        }
+    );
+};
 
 
 
