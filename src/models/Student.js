@@ -4,11 +4,20 @@ import { DEFAULT_PASSWORD } from "../constants.js";
 
 const studentSchema = new Schema(
     {
-        studentId: {
+        studentID: {
             type: String,
             required: true,
             unique: true,
-            index: true
+            index: true,
+            // Generated automatically using a pre-save hook, e.g., 2025001, 2025099
+          },
+        uuid: {
+            type: String,
+            unique: true
+        },
+        enrollmentYr: {
+            type: Number,
+            // Represents the enrollment year (e.g., 2025)
         },
         photo: {
             type: String // Cloudinary URL or file path
@@ -32,7 +41,8 @@ const studentSchema = new Schema(
             required: true
         },
         bloodGroup: {
-            type: String
+            type: String,
+            enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
         },
         allergies: {
             type: String
@@ -66,7 +76,9 @@ const studentSchema = new Schema(
             type: String
         },
         transport: {
-            type: String
+            type: Boolean,
+            default: false
+            // Changed to Boolean to reflect yes/no value
         },
         strengths: {
             type: String
@@ -81,48 +93,28 @@ const studentSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Diagnosis"
         },
-        comorbidity: {
+        comorbidity: [{
             type: Schema.Types.ObjectId,
             ref: "Diagnosis"
-        },
-        programs: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Program"
-            }
-        ],
-        educator: {
-            type: Schema.Types.ObjectId,
-            ref: "Educator"
-        },
-        secondaryEducator: {
-            type: Schema.Types.ObjectId,
-            ref: "Educator"
-        },
-        sessionType: {
-            type: String
-        },
-        noOfSessions: {
-            type: Number,
-            default: 0
-        },
-        timings: {
-            type: String
+        }],
+        enrollmentDate: {
+            type: Date,
+            default: Date.now
         },
         status: {
             type: String,
             enum: ["Active", "Inactive"],
             default: "Active"
         },
-        password:{
-            type:String,
-            default : generateHashedPasswordSync(DEFAULT_PASSWORD)
+        password: {
+            type: String,
+            default: generateHashedPasswordSync(DEFAULT_PASSWORD)
         }
     },
     {
-        timestamps: true
+      timestamps: true
     }
-);
+  );
 
 studentSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
