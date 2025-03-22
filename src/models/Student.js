@@ -143,5 +143,4 @@ studentSchema.methods.generateAccessToken = function () {
 };
 
 
-
 export const Student = mongoose.model("Student", studentSchema);

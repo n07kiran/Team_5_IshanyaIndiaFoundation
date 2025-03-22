@@ -4,6 +4,26 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import { Appointment } from "../models/Appointment.js";
 
+
+const getEmployee = asyncHandler(async (req, res, next) => {
+    //ignore certain fields : password, createdAt, updatedAt, comments, role , __v
+    const employee = await Employee.findById(req.user._id).select("-password -createdAt -updatedAt -comments -role -__v");
+    if(!employee){
+        throw new ApiError(404, "Employee not found");
+    }
+
+    // populate designation, ignore description, createdAt, updatedAt , __v
+    await employee.populate("designation", "-description -createdAt -updatedAt -__v");
+
+    //populate department, ignore description, createdAt, updatedAt , __v
+    await employee.populate("department", "-description -createdAt -updatedAt -__v");
+
+    // programs array, ignore description, createdAt, updatedAt , __v , prospectusFile
+    await employee.populate("programs", "-description -createdAt -updatedAt -__v -prospectusFile");
+
+    return res.status(200).json(new ApiResponse(200, { employee }, "Employee fetched successfully"));
+})
+
 const getAppointments = asyncHandler(async (req, res, next) => {
     const appointments = await Appointment.find({employee : req.user._id}).sort({createdAt: -1});
     if(appointments.length === 0){
@@ -46,7 +66,7 @@ const loginEmployee = asyncHandler(async (req, res, next) => {
         .json(
             new ApiResponse(
                 200,
-                { employee: employee.email, accessToken },
+                { employee: {_id: employee._id}, accessToken },
                 "Employee logged in successfully"
             )
         );
@@ -64,4 +84,4 @@ const logoutEmployee = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
 });
 
-export { loginEmployee, logoutEmployee,getAppointments };
+export { loginEmployee, logoutEmployee,getAppointments,getEmployee };

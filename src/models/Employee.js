@@ -59,9 +59,6 @@ const employeeSchema = new Schema(
         dateOfLeaving: {
             type: Date
         },
-        tenure: {
-            type: String
-        },
         workLocation: {
             type: String
         },

@@ -1,7 +1,16 @@
 import {Appointment} from "../models/Appointment.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { Student } from "../models/Student.js";
 
-
+const getStudent = asyncHandler(async (req, res) => {
+  //ignore certain fields : password, createdAt, updatedAt, __v,comments
+  const student = await Student.findById(req.user._id).select("-password -createdAt -updatedAt -__v -comments");
+  if(!student){
+    throw new ApiError(404, "Student not found");
+  }
+  return res.status(200).json(new ApiResponse(200, { student }, "Student fetched successfully"));
+})
 
 const requestAppointment = asyncHandler(async (req, res) => {
     try {
@@ -94,4 +103,4 @@ const logoutStudent = asyncHandler(async (req, res, next) => {
 });
 
 
-export { requestAppointment,loginStudent,logoutStudent };
+export { requestAppointment,loginStudent,logoutStudent,getStudent };
