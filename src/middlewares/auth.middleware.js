@@ -19,7 +19,7 @@ export const verifyJWTStudent = asyncHandler(async (req,res,next) => {
     let user;
 
     if(decodedUser.role == "student" ){
-        user = Student.findById(decodedUser._id)
+        user = await Student.findById(decodedUser._id)
     }
 
     if(!user){
@@ -39,11 +39,13 @@ export const verifyJWTEmployee = asyncHandler(async (req,res,next) => {
 
     const decodedUser = jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET_KEY)
 
-    let user;
+    let user = null;
 
     if(decodedUser.role == "employee" ){
-        user = Employee.findById(decodedUser._id)
+        user = await Employee.findById(decodedUser._id)
     }
+    
+    // console.log(user)
 
     if(!user){
         throw new ApiError(401,"Invalid employee Access Token")
@@ -65,7 +67,7 @@ export const verifyJWTAdmin = asyncHandler(async (req,res,next) => {
     let user;
 
     if(decodedUser.role == "admin" ){
-        user = Employee.findById(decodedUser._id)
+        user = await Employee.findById(decodedUser._id)
     }
 
     if(!user){

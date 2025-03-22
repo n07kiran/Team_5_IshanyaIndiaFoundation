@@ -5,7 +5,7 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import { Appointment } from "../models/Appointment.js";
 
 const getAppointments = asyncHandler(async (req, res, next) => {
-    const appointments = await Appointment.find({employee: req.user._id}).sort({createdAt: -1});
+    const appointments = await Appointment.find({employee : req.user._id}).sort({createdAt: -1});
     if(appointments.length === 0){
         return res.status(200).json(new ApiResponse(200, { appointments: [] }, "No appointments found"));
     }
@@ -52,10 +52,15 @@ const loginEmployee = asyncHandler(async (req, res, next) => {
 });
 
 const logoutEmployee = asyncHandler(async (req, res, next) => {
+    await Employee.findByIdAndUpdate(
+        req.user._id,
+        { new: true }
+    );
+
     return res
         .status(200)
         .clearCookie("accessToken")
-        .json(new ApiResponse(200, "Employee logged out!"));
+        .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
 });
 
 export { loginEmployee, logoutEmployee,getAppointments };

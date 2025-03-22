@@ -8,8 +8,8 @@ import { updateAppointment } from "../controllers/admin.controller.js";
 
 const EmployeeRouter = Router();
 
-EmployeeRouter.get("/appointments", getAppointments);
-EmployeeRouter.post("/update_appointment", updateAppointment);
+EmployeeRouter.get("/appointments",verifyJWTEmployee, getAppointments);
+EmployeeRouter.post("/update_appointment",verifyJWTEmployee, updateAppointment);
 
 // Secured routes
 EmployeeRouter.post("/login", loginEmployee);
