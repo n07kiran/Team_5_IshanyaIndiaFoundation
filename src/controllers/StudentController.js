@@ -82,15 +82,15 @@ const loginStudent = asyncHandler(async (req, res, next) => {
 
 
 const logoutStudent = asyncHandler(async (req, res, next) => {
-  await Student.findByIdAndUpdate(
-      req.user._id,
-      { new: true }
-  );
+  // await Student.findByIdAndUpdate(
+  //     req.user._id,
+  //     { new: true }
+  // );
 
   return res
       .status(200)
       .clearCookie("accessToken")
-      .json(new ApiResponse(200, { student : req.user.studentId }, "Student/Parent logged out!"));
+      .json(new ApiResponse(200, "Student/Parent logged out!"));
 });
 
 

@@ -15,24 +15,24 @@ AdminRouter.post("/login", loginAdmin);
 
 AdminRouter.post("/logout", verifyJWTAdmin, logoutAdmin);
 
-AdminRouter.get("/appointments", getAppointments);
-AdminRouter.post("/schedule_appointment", scheduleAppointment);
-AdminRouter.post("/update_appointment", updateAppointment);
+AdminRouter.get("/appointments",verifyJWTAdmin, getAppointments);
+AdminRouter.post("/schedule_appointment",verifyJWTAdmin, scheduleAppointment);
+AdminRouter.post("/update_appointment",verifyJWTAdmin, updateAppointment);
 
 
-AdminRouter.post("/add_employee", addEmployee);
+AdminRouter.post("/add_employee",verifyJWTAdmin, addEmployee);
 
-AdminRouter.get("/departments", getDepartments);
+AdminRouter.get("/departments",verifyJWTAdmin, getDepartments);
 AdminRouter.post("/add_department", addDepartment);
 
-AdminRouter.get("/designations", getDesignations);
-AdminRouter.post("/add_designation", addDesignation);
+AdminRouter.get("/designations",verifyJWTAdmin, getDesignations);
+AdminRouter.post("/add_designation",verifyJWTAdmin, addDesignation);
 
-AdminRouter.get("/diagnosis", getDiagnoses);
-AdminRouter.post("/add_diagnosis", addDiagnosis);
+AdminRouter.get("/diagnosis",verifyJWTAdmin, getDiagnoses);
+AdminRouter.post("/add_diagnosis",verifyJWTAdmin, addDiagnosis);
 
-AdminRouter.get("/programs", getPrograms);
-AdminRouter.post("/add_program", addProgram);
+AdminRouter.get("/programs",verifyJWTAdmin, getPrograms);
+AdminRouter.post("/add_program",verifyJWTAdmin, addProgram);
 
 
 
