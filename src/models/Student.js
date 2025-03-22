@@ -113,6 +113,33 @@ const studentSchema = new Schema(
     }
   );
 
+// Static method to generate next student ID
+studentSchema.statics.generateStudentID = async function() {
+    // Find the student with the highest studentID
+    const lastStudent = await this.findOne({}, { studentID: 1 })
+        .sort({ studentID: -1 })
+        .lean();
+
+    // If no student exists, return the first ID in the sequence
+    if (!lastStudent) {
+        return "2025001";
+    }
+
+    // Extract the numeric part from the last ID
+    const lastID = lastStudent.studentID;
+    const numericPart = parseInt(lastID.replace("2025", ""));
+
+    // Increment the numeric part
+    const nextNumericPart = numericPart + 1;    
+
+    // Pad the numeric part with zeros to ensure 3-digit format
+    const paddedNumericPart = String(nextNumericPart).padStart(3, "0");
+
+    // Return the new student ID
+    return `2025${paddedNumericPart}`;
+};
+
+
 studentSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);

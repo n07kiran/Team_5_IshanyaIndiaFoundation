@@ -9,6 +9,18 @@ import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
 
+const enrollStudent = asyncHandler(async (req, res, next) => {
+    const { _id } = req.body;
+
+    const student = await Student.findById(_id);
+
+    if(!student){
+        throw new ApiError(404, "Student not found");
+    }
+    
+    return res.status(200).json(new ApiResponse(200, { student }, "Student enrolled successfully"));
+})
+
 const addStudent = asyncHandler(async (req, res, next) => {
     const {
         uuid,
@@ -563,5 +575,6 @@ export {
     updateAppointment,
     getAllEmployees,
     getAllStudents,
-    addStudent
+    addStudent,
+    enrollStudent
 };

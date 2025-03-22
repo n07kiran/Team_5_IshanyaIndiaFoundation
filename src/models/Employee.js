@@ -46,7 +46,7 @@ const employeeSchema = new Schema(
         },
         employmentType: {
             type: String,
-            enum: ["Full-Time", "Part-Time", "Contract"] // TODO: Get it from the excel file
+            enum: ["Full-Time", "Part-Time", "Intern"] // TODO: Get it from the excel file
         },
         status: {
             type: String,
