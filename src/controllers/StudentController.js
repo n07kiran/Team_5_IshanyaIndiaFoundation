@@ -65,7 +65,7 @@ const loginStudent = asyncHandler(async (req, res, next) => {
 
   const cookieOptions = {
       httpOnly: true,
-      secure: true,
+      secure: false,
   };
 
   return res
