@@ -38,6 +38,59 @@ const getAppointments = asyncHandler(async (req,res,next)=>{
         );
 })
 
+const scheduleAppointment = asyncHandler(async (req, res, next) => {
+    // get appointment id from request body
+    const { appointmentId } = req.body;
+
+    // find appointment by id
+    const appointment = await Appointment.findById(appointmentId);  
+
+    if(!appointment){
+        throw new ApiError(404, "Appointment not found");
+    }
+    
+    // check status of appointment
+    if(appointment.status === "scheduled"){
+        // send response that appointment is already scheduled
+        return res.status(200).json(new ApiResponse(200, { appointment }, "Appointment already scheduled"));
+    }
+
+    // get date and time from body and convert to date and timeSchema object, update appointment,if not same as earlier
+    const { date, time } = req.body;
+    const appointmentDate = new Date(date);
+    const appointmentTime = new Date(time);
+
+    // check if date is present or not  
+    if(appointmentDate){
+        appointment.date = appointmentDate;
+    }
+
+    // check if time is present or not
+    if(appointmentTime){
+        appointment.time = appointmentTime; 
+    }
+
+    // assign employee to appointment 
+    // get employee id from request body
+    const { employeeId } = req.body;
+
+    // find employee by id
+    const employee = await Employee.findOne({employeeID: employeeId});
+
+    if(!employee){
+        throw new ApiError(404, "Employee not found");
+    }
+
+    // Assign employee to appointment
+    appointment.employee = employee._id;
+
+    // TODO :  send email to employee and Parent
+
+    appointment.status = "scheduled";
+    await appointment.save();
+    return res.status(200).json(new ApiResponse(200, { appointment }, "Appointment scheduled successfully"));
+})
+
 const addEmployee = asyncHandler(async (req, res, next) => {
     // Extract employee data from request body
     const {
@@ -94,7 +147,9 @@ const addEmployee = asyncHandler(async (req, res, next) => {
     }
 
     // Create the new employee
+    const employeeID = await Employee.generateEmployeeID();
     const employee = await Employee.create({
+        employeeID,
         firstName,
         lastName,
         gender,

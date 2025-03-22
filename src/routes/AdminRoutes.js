@@ -9,6 +9,8 @@ AdminRouter.post("/login", loginAdmin);
 AdminRouter.post("/logout", verifyJWTAdmin, logoutAdmin);
 
 AdminRouter.get("/appointments", getAppointments);
+AdminRouter.post("/schedule_appointment", scheduleAppointment);
+
 
 AdminRouter.post("/add_employee", addEmployee);
 
@@ -23,8 +25,6 @@ AdminRouter.post("/add_diagnosis", addDiagnosis);
 
 AdminRouter.get("/programs", getPrograms);
 AdminRouter.post("/add_program", addProgram);
-
-
 
 
 
