@@ -57,7 +57,7 @@ export const verifyJWTAdmin = asyncHandler(async (req,res,next) => {
     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
 
     if(!accessToken){
-        throw new ApiError(401,"UnAuthorized user")
+        throw new ApiError(401,"UnAuthorized Admin")
     }
 
     const decodedUser = jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET_KEY)
@@ -65,7 +65,7 @@ export const verifyJWTAdmin = asyncHandler(async (req,res,next) => {
     let user;
 
     if(decodedUser.role == "admin" ){
-        user = Admin.findById(decodedUser._id)
+        user = Employee.findById(decodedUser._id)
     }
 
     if(!user){

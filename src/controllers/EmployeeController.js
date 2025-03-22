@@ -52,15 +52,10 @@ const loginEmployee = asyncHandler(async (req, res, next) => {
 });
 
 const logoutEmployee = asyncHandler(async (req, res, next) => {
-    await Employee.findByIdAndUpdate(
-        req.user._id,
-        { new: true }
-    );
-
     return res
         .status(200)
         .clearCookie("accessToken")
-        .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
+        .json(new ApiResponse(200, "Employee logged out!"));
 });
 
 export { loginEmployee, logoutEmployee,getAppointments };

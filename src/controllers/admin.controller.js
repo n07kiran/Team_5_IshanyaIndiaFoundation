@@ -378,7 +378,7 @@ const loginAdmin = asyncHandler(async (req, res, next) => {
         throw new ApiError(404, "Admin does not exist");
     }
 
-    if (employee.designation.title != 'Admin'){
+    if (employee.role != "admin"){
         throw new ApiError(404, "UnAuthorized Employee")
     }
 
@@ -408,15 +408,10 @@ const loginAdmin = asyncHandler(async (req, res, next) => {
 });
 
 const logoutAdmin = asyncHandler(async (req, res, next) => {
-    await Employee.findByIdAndUpdate(
-        req.user._id,
-        { new: true }
-    );
-    
     return res
         .status(200)
         .clearCookie("accessToken")
-        .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
+        .json(new ApiResponse(200,"Admin logged out!"));
 });
 
 export { 
