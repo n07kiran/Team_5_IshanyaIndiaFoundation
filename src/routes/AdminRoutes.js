@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { getAppointments, loginAdmin, logoutAdmin, addEmployee, getDepartments, addDepartment, getDesignations, addDesignation, getDiagnoses, addDiagnosis, getPrograms, addProgram } from "../controllers/admin.controller.js";
+import { getAppointments, loginAdmin, logoutAdmin, addEmployee, 
+    getDepartments, addDepartment, 
+    getDesignations, addDesignation, 
+    getDiagnoses, addDiagnosis, 
+    getPrograms, addProgram,
+    scheduleAppointment
+} from "../controllers/admin.controller.js";
+
 import { verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 
 const AdminRouter = Router();

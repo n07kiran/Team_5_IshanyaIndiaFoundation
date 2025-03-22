@@ -394,5 +394,6 @@ export {
     getDiagnoses,
     addDiagnosis, 
     getPrograms,
-    addProgram 
+    addProgram ,
+    scheduleAppointment
 };
