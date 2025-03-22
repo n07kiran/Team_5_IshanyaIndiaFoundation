@@ -1,6 +1,7 @@
 import Appointment from "../models/Appointment.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-const requestAppointment = async (req, res) => {
+const requestAppointment = asyncHandler(async (req, res) => {
     try {
       const { studentName, parentName, email, phone, date, time, message } = req.body;
       console.log(req.body);
@@ -12,7 +13,7 @@ const requestAppointment = async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: "Internal Server Error", details: error.message });
     }
-  };
+  })
 
   
 const loginStudent = asyncHandler(async (req, res, next) => {

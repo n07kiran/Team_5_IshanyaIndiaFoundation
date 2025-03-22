@@ -1,14 +1,9 @@
 import { Router } from "express";
-import { registerEmployee, loginEmployee, logoutEmployee } from "../controllers/EmployeeController.js";
+import { loginEmployee, logoutEmployee } from "../controllers/EmployeeController.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const EmployeeRouter = Router();
-
-EmployeeRouter.post(
-    "/register",
-    registerEmployee
-);
 
 EmployeeRouter.post("/login", loginEmployee);
 

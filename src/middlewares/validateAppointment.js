@@ -13,11 +13,16 @@ const validateAppointment = () => {
     body("time.min")
       .isInt({ min: 0, max: 59 })
       .withMessage("Minute must be between 0 and 59"),
-    (req, res, next) => {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+      (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          // Instead of throwing an error, send the error response in JSON format.
+          return res.status(400).json({
+            success: false,
+            message: "Validation Error",
+            errors: errors.array(),
+          });
+        }
       next();
     },
   ];

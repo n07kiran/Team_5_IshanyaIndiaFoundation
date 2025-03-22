@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateHashedPasswordSync } from "../utils/Password";
-import { DEFAULT_PASSWORD } from "../constants";
+import { generateHashedPasswordSync } from "../utils/Password.js";
+import { DEFAULT_PASSWORD } from "../constants.js";
 
 const studentSchema = new Schema(
     {

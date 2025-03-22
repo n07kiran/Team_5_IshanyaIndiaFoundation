@@ -22,7 +22,7 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 //routes
-app.use("/api/v1/parent",StudentRouter);
+app.use("/api/v1/student",StudentRouter);
 app.use("/api/v1/employee",EmployeeRouter);
 
 //http://localhost:8000/api/v1/users/register

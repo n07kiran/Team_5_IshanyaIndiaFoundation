@@ -15,18 +15,18 @@ const appointmentSchema = new mongoose.Schema(
         enum: ["pending", "scheduled", "completed"],
         default: "pending"
       },
-      remarks: {
-        type: String,
-        trim: true
-      },
-      employee: {
-        type: Schema.Types.ObjectId,
-        ref: "Employee"
-      },
-      verdict: {
-        type: String,
-        enum: ["joined", "recommendation"]
-      }
+    remarks: {
+      type: String,
+      trim: true
+    },
+    employee: {
+      type: Schema.Types.ObjectId,
+      ref: "Employee"
+    },
+    verdict: {
+      type: String,
+      enum: ["joined", "recommendation"]
+    }
   },
   { timestamps: true }
 );
