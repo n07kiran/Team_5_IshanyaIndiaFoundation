@@ -7,7 +7,7 @@ import { Designation } from "../models/Designation.js";
 import { Department } from "../models/Department.js";
 import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
-import { timeSchema } from "../models/timeSchema.js";
+import { Student } from "../models/Student.js";
 
 
 const getAppointments = asyncHandler(async (req,res,next)=>{
@@ -389,12 +389,10 @@ const loginAdmin = asyncHandler(async (req, res, next) => {
     }
 
     const accessToken = await employee.generateAccessToken();
-
     const cookieOptions = {
         httpOnly: true,
-        secure: true,
+        secure: false,
     };
-
     return res
         .status(200)
         .cookie("accessToken", accessToken, cookieOptions)
@@ -414,6 +412,42 @@ const logoutAdmin = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200,"Admin logged out!"));
 });
 
+const getAllEmployees=asyncHandler(async(req,res,next)=>{
+    const Employees = await Employee.find({}).sort({ name: 1 });
+    
+    if (Employees.length === 0) {
+        return res
+            .status(200)    
+            .json(
+                new ApiResponse(200, { Employees: [] }, "No Employees available")
+            );
+    }
+
+    return res
+        .status(200)    
+        .json(
+        new ApiResponse(200, { Employees }, "Employees fetched successfully")
+    );
+})
+
+const getAllStudents=asyncHandler(async(req,res,next)=>{
+    const Students = await Student.find({}).sort({ name: 1 });
+    
+    if (Students.length === 0) {
+        return res
+            .status(200)    
+            .json(
+                new ApiResponse(200, { Students: [] }, "No Employees available")
+            );
+    }
+
+    return res
+        .status(200)    
+        .json(
+        new ApiResponse(200, { Students }, "Employees fetched successfully")
+    );
+})
+
 export { 
     getAppointments, 
     loginAdmin, 
@@ -428,5 +462,7 @@ export {
     getPrograms,
     addProgram ,
     scheduleAppointment,
-    updateAppointment
+    updateAppointment,
+    getAllEmployees,
+    getAllStudents
 };
