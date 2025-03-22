@@ -8,17 +8,23 @@ const enrollmentSchema = new mongoose.Schema({
     },
     programs: [
         {
-            type: Schema.Types.ObjectId,
-            ref: "Program"
+            _id: {
+                type: Schema.Types.ObjectId,
+                ref: "Program"
+            }
         }
     ],
     educator: {
-        type: Schema.Types.ObjectId,
-        ref: "Educator"
+        _id: {
+            type: Schema.Types.ObjectId,
+            ref: "Employee"
+        }
     },
     secondaryEducator: {
-        type: Schema.Types.ObjectId,
-        ref: "Educator"
+        _id: {
+            type: Schema.Types.ObjectId,
+            ref: "Employee"
+        }
     },
     level: {
         type: Number,
@@ -32,8 +38,10 @@ const enrollmentSchema = new mongoose.Schema({
     },
     sessions: [
         {
-            type: Schema.Types.ObjectId,
-            ref: "Session"
+            _id: {
+                type: Schema.Types.ObjectId,
+                ref: "Session"
+            }
         }
     ]
 },

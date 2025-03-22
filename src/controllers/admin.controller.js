@@ -10,15 +10,61 @@ import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
 
 const enrollStudent = asyncHandler(async (req, res, next) => {
-    const { _id } = req.body;
+    const { student, programs, educator, secondaryEducator, level, status , sessions } = req.body;
 
-    const student = await Student.findById(_id);
+    const existStudent = await Student.findById(student._id);
 
-    if(!student){
+    if(!existStudent){
         throw new ApiError(404, "Student not found");
     }
     
-    return res.status(200).json(new ApiResponse(200, { student }, "Student enrolled successfully"));
+    // check if programs is an >0
+    if(programs.length === 0){
+        throw new ApiError(400, "Programs are required");
+    }
+
+    // check for each program in programs model
+    for(const program of programs){
+        const existProgram = await Program.findById(program._id);
+        if(!existProgram){
+            throw new ApiError(404, "Program not found");
+        }
+    }
+
+    // check if employee exists in employee model
+    const existEducator = await Employee.findById(educator._id);
+    if(!existEducator){
+        throw new ApiError(404, "Educator not found");
+    }
+
+    // check if secondary educator exists in employee model
+    if(secondaryEducator){
+        const existSecondaryEducator = await Employee.findById(secondaryEducator._id);
+        if(!existSecondaryEducator){
+            throw new ApiError(404, "Secondary educator not found");
+        }
+    }
+
+    // check if level is a number and greater than 0
+    if(typeof level !== "number" || level <= 0){
+        throw new ApiError(400, "Invalid level");
+    }
+
+    // check if status is valid
+    const validStatus = ["Active", "Inactive", "Completed"];
+    if(!validStatus.includes(status)){
+        throw new ApiError(400, "Invalid status");
+    }
+
+    // save enrollment in db
+    const enrollment = await Enrollment.create({ student, programs, educator, secondaryEducator, level, status });
+
+    await enrollment.populate("student", "_id name");
+    await enrollment.populate("programs", "_id name");
+    await enrollment.populate("educator", "_id name photo");
+    await enrollment.populate("secondaryEducator", "_id name photo");
+
+    return res.status(200).json(new ApiResponse(200, { enrollment }, "Student enrolled successfully"));
 })
 
 const addStudent = asyncHandler(async (req, res, next) => {
@@ -78,8 +124,8 @@ const addStudent = asyncHandler(async (req, res, next) => {
 
     // comorbidity validation, check from db use _id for each {_id } in commorbidity array
     if(comorbidity.length > 0){
-        for(const comorbidityId of comorbidity){
-            const comorbidityExists = await Diagnosis.findById(comorbidityId);
+        for(const c of comorbidity){
+            const comorbidityExists = await Diagnosis.findById(c._id);
             if(!comorbidityExists){
                 throw new ApiError(400, "Invalid comorbidity");
             }
