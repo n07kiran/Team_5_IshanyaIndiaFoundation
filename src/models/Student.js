@@ -15,10 +15,6 @@ const studentSchema = new Schema(
             type: String,
             unique: true
         },
-        enrollmentYr: {
-            type: Number,
-            // Represents the enrollment year (e.g., 2025)
-        },
         photo: {
             type: String // Cloudinary URL or file path
         },
@@ -34,7 +30,8 @@ const studentSchema = new Schema(
         },
         gender: {
             type: String,
-            required: true
+            required: true,
+            enum: ["Male", "Female","Other"]
         },
         dob: {
             type: Date,

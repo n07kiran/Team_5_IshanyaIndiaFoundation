@@ -9,6 +9,104 @@ import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
 
+const addStudent = asyncHandler(async (req, res, next) => {
+    const {
+        uuid,
+        firstName,
+        lastName,
+        gender,
+        dob,
+        bloodGroup,
+        allergies,
+        phoneNumber,
+        secondaryPhoneNumber,
+        email,
+        parentEmail,
+        fatherName,
+        motherName,
+        address,
+        transport,
+        strengths,
+        weaknesses,
+        comments,
+        primaryDiagnosis,
+        comorbidity,
+        photo,
+        enrollmentDate
+    } = req.body;
+
+    // Add validation and logic to create a new student, for each field
+    if(!firstName || !gender || !dob || !bloodGroup|| !phoneNumber || !email || !parentEmail || !fatherName || !motherName || !primaryDiagnosis){
+        throw new ApiError(400, "All fields are required");
+    }
+
+    //add field specific validation
+    // gender validation , use array of valid genders
+    const validGenders = ["Male", "Female", "Other"];
+    if(!validGenders.includes(gender)){
+        throw new ApiError(400, "Invalid gender");
+    }
+
+    // blood group validation , use array of valid blood groups
+    const validBloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+    if(!validBloodGroups.includes(bloodGroup)){
+        throw new ApiError(400, "Invalid blood group");
+    }
+
+    // phone number validation , length should be 10    
+    if(phoneNumber.length !== 10){
+        throw new ApiError(400, "Invalid phone number");
+    }
+
+    // primary diagnosis validation, check from db use _id
+    const primaryDiagnosisExists = await Diagnosis.findById(primaryDiagnosis._id);
+    if(!primaryDiagnosisExists){
+        throw new ApiError(400, "Invalid primary diagnosis");
+    }
+
+    // comorbidity validation, check from db use _id for each {_id } in commorbidity array
+    if(comorbidity.length > 0){
+        for(const comorbidityId of comorbidity){
+            const comorbidityExists = await Diagnosis.findById(comorbidityId);
+            if(!comorbidityExists){
+                throw new ApiError(400, "Invalid comorbidity");
+            }
+        }
+    }
+
+    // create student in db
+    const studentID = await Student.generateStudentID();
+
+    // after creating student, return new student object
+
+    const student = await Student.create({
+        uuid,
+        studentID,
+        firstName,
+        lastName,
+        gender,
+        dob,
+        bloodGroup,
+        allergies,
+        phoneNumber,
+        secondaryPhoneNumber,
+        email,
+        parentEmail,
+        fatherName,
+        motherName,
+        address,
+        transport,
+        strengths,
+        weaknesses,
+        comments,
+        primaryDiagnosis,
+        comorbidity,
+        photo,
+        enrollmentDate
+    });
+    // Example response
+    return res.status(201).json(new ApiResponse(201, {}, "Student added successfully"));
+});
 
 const getAppointments = asyncHandler(async (req,res,next)=>{
     const appointments = await Appointment.find({})
@@ -464,5 +562,6 @@ export {
     scheduleAppointment,
     updateAppointment,
     getAllEmployees,
-    getAllStudents
+    getAllStudents,
+    addStudent
 };
