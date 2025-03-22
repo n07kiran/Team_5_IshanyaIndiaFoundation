@@ -7,12 +7,12 @@ import { Designation } from "../models/Designation.js";
 import { Department } from "../models/Department.js";
 import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
-
+import { timeSchema } from "../models/timeSchema.js";
 
 
 const getAppointments = asyncHandler(async (req,res,next)=>{
     const appointments = await Appointment.find({})
-        .populate("employee")
+        .populate("employee", "_id name email") // only sepeficic fields
         .sort({ createdAt: -1 });
     
     if (appointments.length === 0) {
@@ -58,7 +58,7 @@ const scheduleAppointment = asyncHandler(async (req, res, next) => {
     // get date and time from body and convert to date and timeSchema object, update appointment,if not same as earlier
     const { date, time } = req.body;
     const appointmentDate = new Date(date);
-    const appointmentTime = new Date(time);
+    const appointmentTime = {hr:time.hr, min:time.min};
 
     // check if date is present or not  
     if(appointmentDate){
@@ -90,6 +90,43 @@ const scheduleAppointment = asyncHandler(async (req, res, next) => {
     await appointment.save();
     return res.status(200).json(new ApiResponse(200, { appointment }, "Appointment scheduled successfully"));
 })
+
+const updateAppointment = asyncHandler(async (req, res, next) => {
+    const { appointmentId, verdict, remarks ,status } = req.body;
+
+    const appointment = await Appointment.findById(appointmentId);
+
+    if(!appointment){
+        throw new ApiError(404, "Appointment not found");
+    }
+
+    // update status,remarks,verdict
+
+    // check if status is present or not
+    if(status){
+        // check if status is valid or not
+        if(status !== "pending" && status !== "scheduled" && status !== "completed"){
+            throw new ApiError(400, "Invalid status");
+        }
+        appointment.status = status;
+    }
+    // check if remarks is present or not
+    if(remarks){
+        appointment.remarks = remarks;
+    }
+    // check if verdict is present or not
+    if(verdict){
+        // check if verdict is valid or not
+        if(verdict !== "joined" && verdict !== "recommendation"){
+            throw new ApiError(400, "Invalid verdict");
+        }
+        appointment.verdict = verdict;
+    }
+    await appointment.save();
+
+    return res.status(200).json(new ApiResponse(200, { appointment }, "Appointment updated successfully"));
+})
+
 
 const addEmployee = asyncHandler(async (req, res, next) => {
     // Extract employee data from request body
@@ -395,5 +432,6 @@ export {
     addDiagnosis, 
     getPrograms,
     addProgram ,
-    scheduleAppointment
+    scheduleAppointment,
+    updateAppointment
 };

@@ -4,7 +4,7 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     getDesignations, addDesignation, 
     getDiagnoses, addDiagnosis, 
     getPrograms, addProgram,
-    scheduleAppointment
+    scheduleAppointment,updateAppointment
 } from "../controllers/admin.controller.js";
 
 import { verifyJWTAdmin } from "../middlewares/auth.middleware.js";
@@ -17,6 +17,7 @@ AdminRouter.post("/logout", verifyJWTAdmin, logoutAdmin);
 
 AdminRouter.get("/appointments", getAppointments);
 AdminRouter.post("/schedule_appointment", scheduleAppointment);
+AdminRouter.post("/update_appointment", updateAppointment);
 
 
 AdminRouter.post("/add_employee", addEmployee);

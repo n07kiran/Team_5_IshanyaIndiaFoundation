@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-export const timeSchema = new Schema(
+const timeSchema = new Schema(
     {
       hr: {
         type: Number,
@@ -15,7 +15,7 @@ export const timeSchema = new Schema(
       }
     },
     { _id: false } // Prevents creation of an _id for this subdocument
-  );  
+  );
 
+  export {timeSchema};
 
-//   export const Time = mongoose.model("Time", studentSchema);

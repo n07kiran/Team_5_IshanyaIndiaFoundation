@@ -2,6 +2,15 @@ import { Employee } from "../models/Employee.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
+import { Appointment } from "../models/Appointment.js";
+
+const getAppointments = asyncHandler(async (req, res, next) => {
+    const appointments = await Appointment.find({employee: req.user._id}).sort({createdAt: -1});
+    if(appointments.length === 0){
+        return res.status(200).json(new ApiResponse(200, { appointments: [] }, "No appointments found"));
+    }
+    return res.status(200).json(new ApiResponse(200, { appointments }, "Appointments fetched successfully"));
+})
 
 const loginEmployee = asyncHandler(async (req, res, next) => {
     // make it for both email and emplyoeID -> Do it chatgpt
@@ -54,4 +63,4 @@ const logoutEmployee = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
 });
 
-export { loginEmployee, logoutEmployee };
+export { loginEmployee, logoutEmployee,getAppointments };
