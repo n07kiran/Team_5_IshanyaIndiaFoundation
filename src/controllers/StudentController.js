@@ -1,4 +1,4 @@
-import Appointment from "../models/Appointment.js";
+import {Appointment} from "../models/Appointment.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const requestAppointment = asyncHandler(async (req, res) => {

@@ -24,7 +24,8 @@ const employeeSchema = new Schema(
         },
         gender: {
             type: String,
-            required: true
+            required: true,
+            enum: ["Male", "Female", "Other"]
         },
         photo: {
             type: String
@@ -44,7 +45,8 @@ const employeeSchema = new Schema(
             type: String
         },
         employmentType: {
-            type: String
+            type: String,
+            enum: ["Full-Time", "Part-Time", "Contract"] // TODO: Get it from the excel file
         },
         status: {
             type: String,
@@ -83,12 +85,52 @@ const employeeSchema = new Schema(
         password:{
             type:String,
             default: generateHashedPasswordSync(DEFAULT_PASSWORD)
+        },
+        role: {
+            type: String,
+            enum: ["admin", "employee"],
+            default: "employee"
         }
     },
     {
         timestamps: true
     }
 );
+
+// Static method to generate next employee ID
+employeeSchema.statics.generateEmployeeID = async function() {
+    // Find the employee with the highest employeeID
+    const lastEmployee = await this.findOne({}, { employeeID: 1 })
+        .sort({ employeeID: -1 })
+        .lean();
+    
+    // If no employee exists, return the first ID in the sequence
+    if (!lastEmployee) {
+        return "IIF001";
+    }
+    
+    // Extract the numeric part from the last ID
+    const lastID = lastEmployee.employeeID;
+    const numericPart = parseInt(lastID.replace("IIF", ""));
+    
+    // Increment the numeric part
+    const nextNumericPart = numericPart + 1;
+    
+    // Pad the numeric part with zeros to ensure 3-digit format
+    const paddedNumericPart = String(nextNumericPart).padStart(3, "0");
+    
+    // Return the new employee ID
+    return `IIF${paddedNumericPart}`;
+};
+
+// Pre-save hook to auto-generate employee ID if not provided
+employeeSchema.pre("save", async function(next) {
+    // Only generate ID for new employees that don't have an ID yet
+    if (this.isNew && !this.employeeID) {
+        this.employeeID = await this.constructor.generateEmployeeID();
+    }
+    next();
+});
 
 employeeSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
@@ -107,7 +149,7 @@ employeeSchema.methods.generateAccessToken = function () {
             email: this.email,
             firstName: this.firstName,
             employeeID: this.employeeID,
-            designation: this.designation.title
+            role : this.role
         },
         process.env.ACCESS_TOKEN_SECRET_KEY,
         {

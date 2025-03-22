@@ -141,7 +141,7 @@ studentSchema.methods.generateAccessToken = function () {
             email: this.email,
             firstName: this.firstName,
             studentID: this.studentID,
-            designation: "Student"
+            role: "student"
         },
         process.env.ACCESS_TOKEN_SECRET_KEY,
         {

@@ -3,7 +3,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import StudentRouter from "./routes/StudentRoutes.js"
 import EmployeeRouter from "./routes/EmployeeRouter.js"
- 
+import AdminRouter from "./routes/AdminRoutes.js"
 
 const app = express()
 
@@ -24,6 +24,7 @@ app.use(cookieParser())
 //routes
 app.use("/api/v1/student",StudentRouter);
 app.use("/api/v1/employee",EmployeeRouter);
+app.use("/api/v1/admin",AdminRouter);
 
 //http://localhost:8000/api/v1/users/register
 
