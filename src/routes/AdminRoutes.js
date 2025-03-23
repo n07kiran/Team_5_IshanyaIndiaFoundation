@@ -9,7 +9,9 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     getAllStudents,
     addStudent,
     enrollStudent,
-    getEnrollments
+    getEnrollments,
+    sendSMSAdmin,
+    
 } from "../controllers/admin.controller.js";
 
 import { verifyJWTAdmin } from "../middlewares/auth.middleware.js";
@@ -47,4 +49,5 @@ AdminRouter.post("/add_student",verifyJWTAdmin, addStudent);
 AdminRouter.post("/enroll_student",verifyJWTAdmin, enrollStudent);
 AdminRouter.get("/enrollments",verifyJWTAdmin, getEnrollments);
 
+AdminRouter.post("/send_msg",verifyJWTAdmin,sendSMSAdmin);
 export default AdminRouter;

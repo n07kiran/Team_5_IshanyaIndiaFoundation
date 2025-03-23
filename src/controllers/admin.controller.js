@@ -9,6 +9,7 @@ import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
 import { Enrollment } from "../models/Enrollments.js";
+import { sendSMS } from "../utils/phone.js";
 
 const getEnrollments = asyncHandler(async (req, res, next) => {
     // populate student, programs, educator, secondaryEducator, sessions
@@ -52,6 +53,7 @@ const getEnrollments = asyncHandler(async (req, res, next) => {
     
     return res.status(200).json(new ApiResponse(200, { enrollments }, "Enrollments fetched successfully"));
 })
+
 
 const enrollStudent = asyncHandler(async (req, res, next) => {
     const { student, programs, educator, secondaryEducator, level, status , sessions } = req.body;
@@ -330,7 +332,7 @@ const updateAppointment = asyncHandler(async (req, res, next) => {
 
 const addEmployee = asyncHandler(async (req, res, next) => {
     // Extract employee data from request body
-    const {
+    let {
         firstName,
         lastName,
         gender,
@@ -356,22 +358,26 @@ const addEmployee = asyncHandler(async (req, res, next) => {
     if (existingEmployee) {
         throw new ApiError(409, "Employee with this email already exists");
     }
-
     // Validate designation exists (assuming you have Designation model imported)
     if (designation) {
-        const designationExists = await Designation.findById(designation);
+        const designationExists = await Designation.findOne({ title: designation.trim() });
         if (!designationExists) {
-            throw new ApiError(400, "Invalid designation ID");
+            throw new ApiError(400, "Invalid designation title");
         }
+        designation=designationExists._id;
+        console.log(designation);
     }
+    
 
     // Validate department exists (assuming you have Department model imported)
     if (department) {
-        const departmentExists = await Department.findById(department);
+        const departmentExists = await Department.findOne({ name: department.trim() });
         if (!departmentExists) {
-            throw new ApiError(400, "Invalid department ID");
+            throw new ApiError(400, "Invalid department name");
         }
+        department=departmentExists._id;
     }
+    
 
     // Validate programs exist (assuming you have Program model imported)
     if (programs && programs.length > 0) {
@@ -648,6 +654,33 @@ const getAllStudents=asyncHandler(async(req,res,next)=>{
     );
 })
 
+
+const sendSMSAdmin = async (req, res) => {
+    try {
+      const { to,body } = req.body; // Get message text from request
+  
+      if (!body) {
+        return res.status(400).json({ error: "Message body is required" });
+      }
+      if (!to) {
+        return res.status(400).json({ error: "Phone Number is required" });
+      }
+  
+      const messageId = await sendSMS(to,body);
+  
+      res.status(200).json({
+        success: true,
+        message: "Message sent successfully",
+        messageId,
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to send message",
+        details: error.message,
+      });
+    }
+  };
+
 export { 
     getAppointments, 
     loginAdmin, 
@@ -667,5 +700,6 @@ export {
     getAllStudents,
     addStudent,
     enrollStudent,
-    getEnrollments
+    getEnrollments,
+    sendSMSAdmin
 };
