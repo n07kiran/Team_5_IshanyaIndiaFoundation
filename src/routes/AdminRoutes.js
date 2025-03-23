@@ -11,6 +11,9 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     enrollStudent,
     getEnrollments,
     sendSMSAdmin,
+    getJobApplications,
+    updateJobApplication,
+    updateEmployee,
     
 } from "../controllers/admin.controller.js";
 
@@ -50,4 +53,8 @@ AdminRouter.post("/enroll_student",verifyJWTAdmin, enrollStudent);
 AdminRouter.get("/enrollments",verifyJWTAdmin, getEnrollments);
 
 AdminRouter.post("/send_msg",verifyJWTAdmin,sendSMSAdmin);
+AdminRouter.get("/jobApplications",verifyJWTAdmin,getJobApplications);
+
+AdminRouter.post("/updateJobApplication",updateJobApplication);
+AdminRouter.post("/updateEmployee",updateEmployee);
 export default AdminRouter;
