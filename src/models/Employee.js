@@ -69,6 +69,16 @@ const employeeSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Designation"
         },
+        highestQualification: {
+            type: String,
+            enum: [
+                "Bachelor's Degree",
+                "Master's Degree",
+                "Ph.D",
+                "Teaching Certificate",
+                "Other"
+            ],
+        },
         department: {
             type: Schema.Types.ObjectId,
             ref: "Department"
