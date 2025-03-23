@@ -14,9 +14,6 @@ how did u hear about us,
 employment type,
 why do u join our team
 
-
-
-
 employee schema->
 highest qualification,
 resume link,
