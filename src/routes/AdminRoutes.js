@@ -10,7 +10,6 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     addStudent,
     enrollStudent,
     getEnrollments,
-    jobApplication
     sendSMSAdmin,
     getJobApplications,
     updateJobApplication,
