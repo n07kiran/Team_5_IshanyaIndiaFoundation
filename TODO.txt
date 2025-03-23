@@ -18,4 +18,9 @@ employee schema->
 highest qualification,
 resume link,
 document files->id proof,re
+4. Update emploee -> admin
+5. Schema
+6. Student
+
+
 
