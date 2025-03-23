@@ -10,6 +10,7 @@ import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
 import { Enrollment } from "../models/Enrollments.js";
 import { sendSMS } from "../utils/phone.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { JobApplication } from "../models/JobApplication.js";
 
 
@@ -97,7 +98,6 @@ const getJobApplications = asyncHandler(async (req, res, next) => {
         next(error);
     }
 });
-
 
 const getEnrollments = asyncHandler(async (req, res, next) => {
     // populate student, programs, educator, secondaryEducator, sessions
@@ -223,7 +223,6 @@ const addStudent = asyncHandler(async (req, res, next) => {
         comments,
         primaryDiagnosis,
         comorbidity,
-        photo,
         enrollmentDate
     } = req.body;
 
@@ -274,9 +273,17 @@ const addStudent = asyncHandler(async (req, res, next) => {
         throw new ApiError(400, "Invalid primary diagnosis");
     }
 
+    let comorbidityArray;
+    if(typeof comorbidity === "string"){
+        comorbidityArray = [comorbidity];
+    }
     // comorbidity validation, check from db use _id for each {_id } in commorbidity array
-    if(comorbidity.length > 0){
-        for(const c of comorbidity){
+    if(!Array.isArray(comorbidityArray)){
+        throw new ApiError(400, "Comorbidity must be an array");
+    }
+
+    if(comorbidityArray.length > 0){
+        for(const c of comorbidityArray){
             const comorbidityExists = await Diagnosis.findById(c);
             if(!comorbidityExists){
                 throw new ApiError(400, "Invalid comorbidity");
@@ -284,36 +291,53 @@ const addStudent = asyncHandler(async (req, res, next) => {
         }
     }
 
+
+    const photo = req.file;
+    // console.log(photo);
+    let photoUrl;
+    if(photo){
+        const uploadResponse = await uploadOnCloudinary(photo.path);
+        if(!uploadResponse){
+            throw new ApiError(400, "Photo upload failed");
+        }
+        photoUrl = uploadResponse.url;
+    }
+
     // create student in db
     const studentID = await Student.generateStudentID();
 
     // after creating student, return new student object
 
-    const student = await Student.create({
-        uuid,
-        studentID,
-        firstName,
-        lastName,
-        gender,
-        dob,
-        bloodGroup,
-        allergies,
-        phoneNumber,
-        secondaryPhoneNumber,
-        email,
-        parentEmail,
-        fatherName,
-        motherName,
-        address,
-        transport,
-        strengths,
-        weaknesses,
-        comments,
-        primaryDiagnosis,
-        comorbidity,
-        photo,
-        enrollmentDate
-    });
+    try{
+        const student = await Student.create({
+            uuid,
+            studentID,
+            firstName,
+            lastName,
+            gender,
+            dob,
+            bloodGroup,
+            allergies,
+            phoneNumber,
+            secondaryPhoneNumber,
+            email,
+            parentEmail,
+            fatherName,
+            motherName,
+            address,
+            transport,
+            strengths,
+            weaknesses,
+            comments,
+            primaryDiagnosis,
+            comorbidity,
+            photo: photoUrl,
+            enrollmentDate
+        });
+    }catch(error){
+        console.log(error);
+        throw new ApiError(400, "Student creation failed");
+    }
     // Example response
     return res.status(201).json(new ApiResponse(201, {}, "Student added successfully"));
 });

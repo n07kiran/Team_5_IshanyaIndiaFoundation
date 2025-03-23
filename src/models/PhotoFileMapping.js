@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const fileMappingSchema = new mongoose.Schema({
+const PhotoFileMappingSchema = new mongoose.Schema({
     publicUrl: {
         type: String,
     },
@@ -16,7 +16,7 @@ const fileMappingSchema = new mongoose.Schema({
     }
 );
 
-const FileMapping = mongoose.model("FileMapping", fileMappingSchema);
+const PhotoFileMapping = mongoose.model("PhotoFileMapping", PhotoFileMappingSchema);
 
-export { FileMapping };
+export { PhotoFileMapping };
 
