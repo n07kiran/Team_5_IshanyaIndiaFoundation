@@ -291,6 +291,12 @@ const addStudent = asyncHandler(async (req, res, next) => {
         }
     }
 
+    if(email){
+        const existingStudent = await Student.findOne({email});
+        if(existingStudent){
+            throw new ApiError(400, "Student already exists with this email");
+        }
+    }
 
     const photo = req.file;
     // console.log(photo);
