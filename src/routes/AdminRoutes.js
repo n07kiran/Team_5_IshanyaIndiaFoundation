@@ -10,9 +10,9 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     addStudent,
     enrollStudent,
     getEnrollments,
-    sendSMSAdmin,
-    
+    sendSMSAdmin
 } from "../controllers/admin.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 import { verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 
@@ -45,7 +45,7 @@ AdminRouter.get("/allEmployees",verifyJWTAdmin,getAllEmployees);
 AdminRouter.get("/allStudents",verifyJWTAdmin,getAllStudents);
 
 // Student Routes
-AdminRouter.post("/add_student",verifyJWTAdmin, addStudent);
+AdminRouter.post("/add_student",verifyJWTAdmin,upload.single("photo"),addStudent);
 AdminRouter.post("/enroll_student",verifyJWTAdmin, enrollStudent);
 AdminRouter.get("/enrollments",verifyJWTAdmin, getEnrollments);
 

@@ -13,7 +13,7 @@ const studentSchema = new Schema(
           },
         uuid: {
             type: String,
-            unique: true
+            // unique: true
         },
         photo: {
             type: String // Cloudinary URL or file path
@@ -25,7 +25,7 @@ const studentSchema = new Schema(
         },
         lastName: {
             type: String,
-            required: true,
+            // required: true,
             trim: true
         },
         gender: {

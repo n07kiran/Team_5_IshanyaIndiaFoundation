@@ -140,8 +140,26 @@ const addStudent = asyncHandler(async (req, res, next) => {
     } = req.body;
 
     // Add validation and logic to create a new student, for each field
-    if(!firstName || !gender || !dob || !bloodGroup|| !phoneNumber || !email || !parentEmail || !fatherName || !motherName || !primaryDiagnosis){
-        throw new ApiError(400, "All fields are required");
+    // In error message, mention the field name
+    const requiredFields = [
+        { field: firstName, name: 'firstName' },
+        { field: gender, name: 'gender' },
+        { field: dob, name: 'dob' },
+        { field: bloodGroup, name: 'bloodGroup' },
+        { field: phoneNumber, name: 'phoneNumber' },
+        { field: email, name: 'email' },
+        { field: parentEmail, name: 'parentEmail' },
+        { field: fatherName, name: 'fatherName' },
+        { field: motherName, name: 'motherName' },
+        { field: primaryDiagnosis, name: 'primaryDiagnosis' }
+    ];
+
+    const missingFields = requiredFields
+        .filter((obj) => !obj.field)
+        .map((obj) => obj.name);
+
+    if (missingFields.length > 0) {
+        throw new ApiError(400, `Missing required fields: ${missingFields.join(', ')}`);
     }
 
     //add field specific validation
@@ -163,7 +181,7 @@ const addStudent = asyncHandler(async (req, res, next) => {
     }
 
     // primary diagnosis validation, check from db use _id
-    const primaryDiagnosisExists = await Diagnosis.findById(primaryDiagnosis._id);
+    const primaryDiagnosisExists = await Diagnosis.findById(primaryDiagnosis);
     if(!primaryDiagnosisExists){
         throw new ApiError(400, "Invalid primary diagnosis");
     }
@@ -171,7 +189,7 @@ const addStudent = asyncHandler(async (req, res, next) => {
     // comorbidity validation, check from db use _id for each {_id } in commorbidity array
     if(comorbidity.length > 0){
         for(const c of comorbidity){
-            const comorbidityExists = await Diagnosis.findById(c._id);
+            const comorbidityExists = await Diagnosis.findById(c);
             if(!comorbidityExists){
                 throw new ApiError(400, "Invalid comorbidity");
             }

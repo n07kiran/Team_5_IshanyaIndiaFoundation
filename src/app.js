@@ -44,4 +44,12 @@ app.post("/api/v1/upload",upload.single("image"),async (req,res)=>{
     })
 })
 
+app.get("/",(req,res)=>{
+    res.send("At route / Hello World")
+})
+
+app.get("/api/v1/test",(req,res)=>{
+    res.send("At route /api/v1/test")
+})
+
 export {app}
