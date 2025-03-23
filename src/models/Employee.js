@@ -37,7 +37,7 @@ const employeeSchema = new Schema(
             lowercase: true,
             trim: true
         },
-        contact: {
+        phoneNumber: {
             type: String,
             required: true
         },

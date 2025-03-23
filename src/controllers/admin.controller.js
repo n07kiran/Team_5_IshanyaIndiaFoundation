@@ -337,7 +337,7 @@ const addEmployee = asyncHandler(async (req, res, next) => {
         lastName,
         gender,
         email,
-        contact,
+        phoneNumber,
         address,
         employmentType,
         dateOfJoining,
@@ -349,7 +349,7 @@ const addEmployee = asyncHandler(async (req, res, next) => {
     } = req.body;
 
     // Validate required fields
-    if (!firstName || !lastName || !gender || !email || !contact) {
+    if (!firstName || !lastName || !gender || !email || !phoneNumber) {
         throw new ApiError(400, "All required fields must be provided");
     }
 
@@ -397,7 +397,7 @@ const addEmployee = asyncHandler(async (req, res, next) => {
         lastName,
         gender,
         email,
-        contact,
+        phoneNumber,
         address,
         employmentType,
         dateOfJoining: dateOfJoining ? new Date(dateOfJoining) : undefined,
