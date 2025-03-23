@@ -1,0 +1,24 @@
+1. Photo upload -> addStudent, addEmployee
+2. Files upload -> Student-Reports
+3.job application ->
+schema 
+first name
+lastname
+email
+gender,
+yrs of experience,
+resume,
+portfolio
+highest qualification,
+how did u hear about us,
+employment type,
+why do u join our team
+
+
+
+
+employee schema->
+highest qualification,
+resume link,
+document files->id proof,re
+
