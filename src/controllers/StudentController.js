@@ -2,6 +2,7 @@ import {Appointment} from "../models/Appointment.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Student } from "../models/Student.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const getStudent = asyncHandler(async (req, res) => {
   //ignore certain fields : password, createdAt, updatedAt, __v,comments
@@ -58,7 +59,7 @@ const loginStudent = asyncHandler(async (req, res, next) => {
       throw new ApiError(400, "studentId is required!");
   }
 
-  const student = await Student.findOne({ studentId });
+  const student = await Student.findOne({ studentID:studentId });
 
   if (!student) {
       throw new ApiError(404, "student does not exist");
@@ -70,7 +71,7 @@ const loginStudent = asyncHandler(async (req, res, next) => {
       throw new ApiError(401, "Invalid student credentials!");
   }
 
-  const accessToken = await Student.generateAccessToken();
+  const accessToken = await student.generateAccessToken();
 
   const cookieOptions = {
       httpOnly: true,
@@ -83,7 +84,7 @@ const loginStudent = asyncHandler(async (req, res, next) => {
       .json(
           new ApiResponse(
               200,
-              { student : student.studentId, accessToken },
+              { student : student.studentID, accessToken },
               "Student/Parent logged in successfully"
           )
       );

@@ -1,6 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 import { generateHashedPasswordSync } from "../utils/Password.js";
 import { DEFAULT_PASSWORD } from "../constants.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
 
 const studentSchema = new Schema(
     {
