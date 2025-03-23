@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from "cloudinary"
 import fs from "fs"
+import { FileMapping } from "../models/FileMapping.js"
 
 // Configuration
 cloudinary.config({ 
@@ -10,7 +11,6 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath) =>{
     try{
-        
         if(!fs.existsSync(localFilePath)){
             console.log("Local file does not exists 'uploadOnCloudinary' func ");
             return null
@@ -20,8 +20,16 @@ const uploadOnCloudinary = async (localFilePath) =>{
             resource_type:"auto"
         })
 
-        // console.log("File uploaded successfully !")
-        // console.log("Public Url : ",response.url)
+        console.log("File uploaded successfully !")
+        console.log("Public Url : ",response.url)
+
+        //save the file mapping to the database
+        const fileMapping = new FileMapping({
+            publicUrl: response.url,
+            localFilePath: localFilePath,
+            publicId: response.public_id
+        })
+        await fileMapping.save()
         fs.unlinkSync(localFilePath)
         return response
     }catch(error){
@@ -30,23 +38,26 @@ const uploadOnCloudinary = async (localFilePath) =>{
     }
 }
 
-const extractPublicId = (urlString) => {
-    const splitURL = urlString.split("/")
+// const extractPublicId = (urlString) => {
+//     const splitURL = urlString.split("/")
+
+//     const fileName = splitURL.pop().split('.')[0]
     
+//     const regex = /v[0-9]+/
+//     const folderName = splitURL.pop()
     
+//     if(folderName.match(regex))
+//     {
+//       return fileName
+//     }
     
-    const fileName = splitURL.pop().split('.')[0]
-    
-    const regex = /v[0-9]+/
-    const folderName = splitURL.pop()
-    
-    if(folderName.match(regex))
-    {
-      return fileName
-    }
-    
-    return folderName + '/' + fileName
-};
+//     return folderName + '/' + fileName
+// };
+
+const extractPublicId = async (urlString) => {
+    const fileMapping = await FileMapping.findOne({publicUrl: urlString})
+    return fileMapping.publicId
+}
 
 const deleteOnCloudinary = async(publicUrl) =>{
     // ex : http://res.cloudinary.com/kiranchaicloud/image/upload/v1729049814/imnx2xjqmg3rsxzgmvxt.jpg
@@ -56,10 +67,18 @@ const deleteOnCloudinary = async(publicUrl) =>{
 
     console.log({publicUrl , publicId})
 
-    const response = await cloudinary.uploader.destroy(publicId, {resource_type:"image"})
+    const response = await cloudinary.uploader.destroy(publicId, {resource_type:"auto"})
     
     console.log(response)  // { result: 'not found' } , { result: 'ok' }
-    
+
+    if(response.result === "ok"){
+        await FileMapping.deleteOne({publicUrl: publicUrl})
+        return true
+    }
+    else{
+        console.log("File not found")
+        return false
+    }
 }
 
 export {uploadOnCloudinary,deleteOnCloudinary}

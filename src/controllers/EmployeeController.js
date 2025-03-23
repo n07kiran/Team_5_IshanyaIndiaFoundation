@@ -3,6 +3,61 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import { Appointment } from "../models/Appointment.js";
+import { Enrollment } from "../models/Enrollments.js";
+
+const getEnrollments = asyncHandler(async (req, res, next) => {
+    const educatorId = req.user._id;
+
+    const enrollments = await Enrollment.find({
+        $or: [
+            { educator: educatorId },
+            { secondaryEducator: educatorId }
+        ],
+        status: "Active"
+    })
+    .select("student programs educator secondaryEducator level status updatedAt")
+    .populate([
+        {
+            path: "student",
+            select: "studentID firstName lastName photo",
+            populate: [
+                {
+                    path: "primaryDiagnosis",
+                    select: "diagnosisID name -_id"
+                },
+                {
+                    path: "comorbidity",
+                    select: "diagnosisID name -_id"
+                }
+            ]
+        },
+        {
+            path: "programs",
+            select: "name -_id"
+        },
+        {
+            path: "educator",
+            select: "employeeID firstName lastName -_id"
+        },
+        {
+            path: "secondaryEducator",
+            select: "employeeID firstName lastName -_id"
+        }
+    ])
+    .sort({ updatedAt: -1 })
+    .lean();
+
+    if(enrollments.length === 0){
+        return res
+        .status(200).
+        json(new ApiResponse(200, { enrollments: [] }, "No enrollments found"));
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, { enrollments }, "Enrollments fetched successfully"));
+
+});
 
 
 const getEmployee = asyncHandler(async (req, res, next) => {
@@ -84,4 +139,9 @@ const logoutEmployee = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, { employee: req.user.email }, "Employee logged out!"));
 });
 
-export { loginEmployee, logoutEmployee,getAppointments,getEmployee };
+export { 
+    loginEmployee, logoutEmployee,
+    getAppointments,
+    getEmployee,
+    getEnrollments
+ };

@@ -8,6 +8,50 @@ import { Department } from "../models/Department.js";
 import { Program } from "../models/Program.js";
 import { Diagnosis } from "../models/Diagnosis.js";
 import { Student } from "../models/Student.js";
+import { Enrollment } from "../models/Enrollments.js";
+
+const getEnrollments = asyncHandler(async (req, res, next) => {
+    // populate student, programs, educator, secondaryEducator, sessions
+    // ignore createdAt, updatedAt, __v in each populate,
+    // Order elements by student._id and descending order of level and updatedAt
+    const enrollments = await Enrollment.find({})
+        .select("-createdAt -updatedAt -__v")
+        .populate({
+            path: "student",
+            select: "studentID firstName lastName gender photo primaryDiagnosis comorbidity",
+            populate: [
+                {
+                    path: "primaryDiagnosis",
+                    select: "diagnosisID name"
+                },
+                {
+                    path: "comorbidity",
+                    select : "diagnosisID name"
+                }
+            ]
+        })
+        .populate({
+            path: "programs",
+            select: "name "
+        })
+        .populate({
+            path: "educator",
+            select: "employeeID firstName lastName gender photo"
+        })
+        .populate({
+            path: "secondaryEducator",
+            select: "employeeID firstName lastName gender photo"
+        })
+        // .populate("sessions", "-createdAt -updatedAt -__v") // uncomment this when session model is registered
+        .sort({ "student": 1, level: -1, updatedAt: -1 })
+        .lean();
+
+    if(enrollments.length === 0){
+        return res.status(200).json(new ApiResponse(200, { enrollments: [] }, "No enrollments found"));
+    }
+    
+    return res.status(200).json(new ApiResponse(200, { enrollments }, "Enrollments fetched successfully"));
+})
 
 const enrollStudent = asyncHandler(async (req, res, next) => {
     const { student, programs, educator, secondaryEducator, level, status , sessions } = req.body;
@@ -622,5 +666,6 @@ export {
     getAllEmployees,
     getAllStudents,
     addStudent,
-    enrollStudent
+    enrollStudent,
+    getEnrollments
 };

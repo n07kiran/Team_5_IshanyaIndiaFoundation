@@ -1,30 +1,24 @@
 import mongoose from "mongoose";
-
+import { Schema } from "mongoose";
 
 const enrollmentSchema = new mongoose.Schema({
     student: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Student"
     },
     programs: [
         {
-            _id: {
-                type: Schema.Types.ObjectId,
-                ref: "Program"
-            }
+            type: Schema.Types.ObjectId,
+            ref: "Program"
         }
     ],
     educator: {
-        _id: {
-            type: Schema.Types.ObjectId,
-            ref: "Employee"
-        }
+        type: Schema.Types.ObjectId,
+        ref: "Employee"
     },
     secondaryEducator: {
-        _id: {
-            type: Schema.Types.ObjectId,
-            ref: "Employee"
-        }
+        type: Schema.Types.ObjectId,
+        ref: "Employee"
     },
     level: {
         type: Number,
@@ -37,12 +31,10 @@ const enrollmentSchema = new mongoose.Schema({
         default: "Active"
     },
     sessions: [
-        {
-            _id: {
+            {
                 type: Schema.Types.ObjectId,
                 ref: "Session"
             }
-        }
     ]
 },
     {
@@ -50,6 +42,11 @@ const enrollmentSchema = new mongoose.Schema({
     }
 );
 
+enrollmentSchema.index({ student: 1 });
+enrollmentSchema.index({ educator: 1 });
+enrollmentSchema.index({ secondaryEducator: 1 });
+enrollmentSchema.index({ updatedAt: -1 });
+
 const Enrollment = mongoose.model("Enrollment", enrollmentSchema);
 
-export default Enrollment;
+export { Enrollment };
