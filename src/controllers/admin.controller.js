@@ -274,23 +274,30 @@ const addStudent = asyncHandler(async (req, res, next) => {
     }
 
     let comorbidityArray;
-    if(typeof comorbidity === "string"){
-        comorbidityArray = [comorbidity];
-    }
-    // comorbidity validation, check from db use _id for each {_id } in commorbidity array
-    if(!Array.isArray(comorbidityArray)){
-        throw new ApiError(400, "Comorbidity must be an array");
-    }
+    if(comorbidity){
+        if(typeof comorbidity === "string"){
+            comorbidityArray = [comorbidity];
+        }
+        else{
+            comorbidityArray = comorbidity;
+        }
 
-    if(comorbidityArray.length > 0){
-        for(const c of comorbidityArray){
-            const comorbidityExists = await Diagnosis.findById(c);
-            if(!comorbidityExists){
-                throw new ApiError(400, "Invalid comorbidity");
+        // comorbidity validation, check from db use _id for each {_id } in commorbidity array
+        if(!Array.isArray(comorbidityArray)){
+            throw new ApiError(400, "Comorbidity must be an array");
+        }
+
+        if(comorbidityArray.length > 0){
+            for(const c of comorbidityArray){
+                const comorbidityExists = await Diagnosis.findById(c);
+                // console.log(comorbidityExists);
+                if(!comorbidityExists){
+                    throw new ApiError(400, "Invalid comorbidity");
+                }
             }
         }
     }
-
+    
     if(email){
         const existingStudent = await Student.findOne({email});
         if(existingStudent){

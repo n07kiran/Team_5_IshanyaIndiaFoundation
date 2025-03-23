@@ -22,7 +22,7 @@ const uploadOnCloudinary = async (localFilePath) =>{
 
         console.log("File uploaded successfully !")
         console.log("Public Url : ",response.url)
-        fs.unlinkSync(localFilePath)
+        
 
         //save the file mapping to the database
         try{
@@ -36,6 +36,12 @@ const uploadOnCloudinary = async (localFilePath) =>{
             console.log("Error in saving file mapping to the database")
             console.log(error)
             return null
+        }
+
+        try {
+            fs.unlinkSync(localFilePath)
+        } catch (err) {
+            console.error(`Error deleting file ${localFilePath}:`, err)
         }
         return response
     }catch(error){
