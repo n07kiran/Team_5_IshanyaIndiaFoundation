@@ -11,7 +11,93 @@ import { Student } from "../models/Student.js";
 import { Enrollment } from "../models/Enrollments.js";
 import { sendSMS } from "../utils/phone.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { JobApplication } from "../models/JobApplication.js";
 
+
+const updateEmployee=asyncHandler(async(req,res,next)=>{
+    const {empId,designation,department}=addDepartment;
+})
+
+const updateJobApplication = asyncHandler(async (req, res, next) => {
+    const { jobId,progress } = req.body; // Only progress should be updated
+
+    try {
+        // Validate request
+        if (!progress) {
+            return res.status(400).json({ message: "Progress field is required" });
+        }
+
+        if (!["Applied", "Under_Review", "Rejected", "Hired"].includes(progress)) {
+            return res.status(400).json({ message: "Invalid progress value" });
+        }
+
+        // Find job application
+        const jobApplication = await JobApplication.findOne({ jobId });
+
+        if (!jobApplication) {
+            return res.status(404).json({ message: "Job application not found" });
+        }
+
+        // Update progress
+        jobApplication.progress = progress;
+        await jobApplication.save();
+
+        // If progress is changed to "Hired", add employee to Employee collection
+        if (progress === "Hired") {
+            const existingEmployee = await Employee.findOne({ email: jobApplication.email });
+
+            if (existingEmployee) {
+                return res.status(400).json({ message: "Employee already exists with this email" });
+            }
+            const employeeID = await Employee.generateEmployeeID();
+            const newEmployee = new Employee({
+                employeeID,
+                firstName: jobApplication.firstName,
+                lastName: jobApplication.lastName,
+                gender: jobApplication.gender,
+                email: jobApplication.email,
+                phoneNumber: jobApplication.phoneNumber,
+                employmentType: jobApplication.employmentType,
+                address:jobApplication.address,
+                dateOfJoining: new Date(), // Set joining date to current date
+                role: "employee"
+            });
+
+            await newEmployee.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Job application updated successfully. Progress changed to ${progress}.`
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+const getJobApplications = asyncHandler(async (req, res, next) => {
+    try {
+        // Fetch all job applications from the database
+        const jobApplications = await JobApplication.find();
+
+        // If no applications are found, return a message
+        if (!jobApplications || jobApplications.length === 0) {
+            return res.status(404).json({ message: "No job applications found" });
+        }
+
+        // Return the list of job applications
+        res.status(200).json({
+            success: true,
+            count: jobApplications.length,
+            jobApplications
+        });
+
+    } catch (error) {
+        // Handle unexpected errors
+        next(error);
+    }
+});
 
 const getEnrollments = asyncHandler(async (req, res, next) => {
     // populate student, programs, educator, secondaryEducator, sessions
@@ -376,7 +462,7 @@ const updateAppointment = asyncHandler(async (req, res, next) => {
 
 const addEmployee = asyncHandler(async (req, res, next) => {
     // Extract employee data from request body
-    let {
+    const {
         firstName,
         lastName,
         gender,
@@ -389,7 +475,8 @@ const addEmployee = asyncHandler(async (req, res, next) => {
         comments,
         designation,
         department,
-        programs
+        programs,
+        highestQualification
     } = req.body;
 
     // Validate required fields
@@ -404,22 +491,19 @@ const addEmployee = asyncHandler(async (req, res, next) => {
     }
     // Validate designation exists (assuming you have Designation model imported)
     if (designation) {
-        const designationExists = await Designation.findOne({ title: designation.trim() });
+        const designationExists = await Designation.findById(designation);
         if (!designationExists) {
             throw new ApiError(400, "Invalid designation title");
         }
-        designation=designationExists._id;
-        console.log(designation);
     }
     
 
     // Validate department exists (assuming you have Department model imported)
     if (department) {
-        const departmentExists = await Department.findOne({ name: department.trim() });
+        const departmentExists = await Department.findById(department);
         if (!departmentExists) {
             throw new ApiError(400, "Invalid department name");
         }
-        department=departmentExists._id;
     }
     
 
@@ -449,7 +533,8 @@ const addEmployee = asyncHandler(async (req, res, next) => {
         comments,
         designation,
         department,
-        programs
+        programs,
+        highestQualification
     });
 
     // Populate the referenced fields for the response
@@ -745,5 +830,8 @@ export {
     addStudent,
     enrollStudent,
     getEnrollments,
-    sendSMSAdmin
+    sendSMSAdmin,
+    getJobApplications,
+    updateJobApplication,
+    updateEmployee
 };
