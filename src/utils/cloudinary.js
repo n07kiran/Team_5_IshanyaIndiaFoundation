@@ -1,6 +1,6 @@
 import {v2 as cloudinary} from "cloudinary"
 import fs from "fs"
-import { FileMapping } from "../models/FileMapping.js"
+import { PhotoFileMapping } from "../models/PhotoFileMapping.js"
 
 // Configuration
 cloudinary.config({ 
@@ -22,15 +22,21 @@ const uploadOnCloudinary = async (localFilePath) =>{
 
         console.log("File uploaded successfully !")
         console.log("Public Url : ",response.url)
+        fs.unlinkSync(localFilePath)
 
         //save the file mapping to the database
-        const fileMapping = new FileMapping({
-            publicUrl: response.url,
-            localFilePath: localFilePath,
-            publicId: response.public_id
-        })
-        await fileMapping.save()
-        fs.unlinkSync(localFilePath)
+        try{
+            const pfm = new PhotoFileMapping({
+                publicUrl: response.url,
+                localFilePath: localFilePath,
+                publicId: response.public_id
+            })
+            await pfm.save()
+        }catch(error){
+            console.log("Error in saving file mapping to the database")
+            console.log(error)
+            return null
+        }
         return response
     }catch(error){
         fs.unlinkSync(localFilePath); // shouldn't we retry uploading : Doubt ??
@@ -55,8 +61,8 @@ const uploadOnCloudinary = async (localFilePath) =>{
 // };
 
 const extractPublicId = async (urlString) => {
-    const fileMapping = await FileMapping.findOne({publicUrl: urlString})
-    return fileMapping.publicId
+    const PhotoFileMapping = await PhotoFileMapping.findOne({publicUrl: urlString})
+    return PhotoFileMapping.publicId
 }
 
 const deleteOnCloudinary = async(publicUrl) =>{
@@ -72,7 +78,7 @@ const deleteOnCloudinary = async(publicUrl) =>{
     console.log(response)  // { result: 'not found' } , { result: 'ok' }
 
     if(response.result === "ok"){
-        await FileMapping.deleteOne({publicUrl: publicUrl})
+        await PhotoFileMapping.deleteOne({publicUrl: publicUrl})
         return true
     }
     else{
