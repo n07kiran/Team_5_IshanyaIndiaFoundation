@@ -12,11 +12,97 @@ import { Enrollment } from "../models/Enrollments.js";
 import { sendSMS } from "../utils/phone.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { JobApplication } from "../models/JobApplication.js";
+import mongoose from "mongoose";
 
-
-const updateEmployee=asyncHandler(async(req,res,next)=>{
-    const {empId,designation,department}=addDepartment;
+const deleteEnrollment=asyncHandler(async(req,res,next)=>{
+    const {_id}=req.body;
+    try {
+        const enroll=await Enrollment.findByIdAndDelete(_id);
+        if(!enroll){
+            return res.status(404).json({ success: false, message: "Enrollment not found" });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Enrollment deleted successfully",
+        })
+    } catch (error) {
+        console.error("Error deleting Enrollment:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+        });
+    }
 })
+
+const updateEmployee = asyncHandler(async (req, res) => {
+    const { empId, designation, department, status, dateOfLeaving, programs } = req.body;
+
+    try {
+        // Check if the employee exists
+        // console.log(empId);
+        const employee = await Employee.findById(empId);
+        // console.log(employee);
+        if (!employee) {
+            return res.status(404).json({ success: false, message: "Employee not found" });
+        }
+
+        // Validate status field
+        if (status && !["Active", "Inactive"].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status value" });
+        }
+
+        // Validate ObjectId fields
+        if (designation && !mongoose.Types.ObjectId.isValid(designation)) {
+            return res.status(400).json({ success: false, message: "Invalid designation ID" });
+        }
+        if (department && !mongoose.Types.ObjectId.isValid(department)) {
+            return res.status(400).json({ success: false, message: "Invalid department ID" });
+        }
+        if (programs && !Array.isArray(programs)) {
+            return res.status(400).json({ success: false, message: "Programs should be an array of ObjectIds" });
+        }
+        const photo = req.file;
+        // console.log(photo);
+        const updateFields = {};
+        let photoUrl;
+        if(photo){
+            const uploadResponse = await uploadOnCloudinary(photo.path);
+            if(!uploadResponse){
+                throw new ApiError(400, "Photo upload failed");
+            }
+            photoUrl = uploadResponse.url;
+            updateFields.photo = photoUrl;
+        }
+        // Update fields if provided
+        
+        if (designation) updateFields.designation = designation;
+        if (department) updateFields.department = department;
+        if (status) updateFields.status = status;
+        if (dateOfLeaving) updateFields.dateOfLeaving = dateOfLeaving;
+        if (programs) updateFields.programs = programs;
+
+        // Perform update
+        const updatedEmployee = await Employee.findByIdAndUpdate(
+            empId,
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Employee updated successfully",
+            employee: updatedEmployee
+        });
+    } catch (error) {
+        console.error("Error updating employee:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+        });
+    }
+});
 
 const updateJobApplication = asyncHandler(async (req, res, next) => {
     const { jobId,progress } = req.body; // Only progress should be updated
@@ -59,6 +145,7 @@ const updateJobApplication = asyncHandler(async (req, res, next) => {
                 phoneNumber: jobApplication.phoneNumber,
                 employmentType: jobApplication.employmentType,
                 address:jobApplication.address,
+                highestQualification:jobApplication.highestQualification,
                 dateOfJoining: new Date(), // Set joining date to current date
                 role: "employee"
             });
@@ -846,5 +933,6 @@ export {
     sendSMSAdmin,
     getJobApplications,
     updateJobApplication,
-    updateEmployee
+    updateEmployee,
+    deleteEnrollment
 };
