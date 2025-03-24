@@ -1,0 +1,315 @@
+Program
+[
+    {
+        Skill Area : {
+            Sub Skills : []
+        }
+    }
+]
+
+1. Sameti
+Program
+[
+    {
+        "Skill Area": "Communication",
+        "Sub Skills": [
+            "Following 2/3-step instructions",
+            "Using polite words in various situations",
+            "Ask 'WH' Questions to obtain information",
+            "Initiation and maintenance of conversation",
+            "Describing and talking about an event, an object, or people",
+            "Commenting on objects or events",
+            "Using appropriate words to communicate and reason their emotions",
+            "Making a simple sentence (subject + verb + object)"
+        ]
+    },
+    {
+        "Skill Area": "Cognition",
+        "Sub Skills": [
+            "Prediction",
+            "Cause & effect",
+            "Logical sequencing",
+            "Decision making",
+            "Problem-Solving",
+            "Odd One Out + Reasoning"
+        ]
+    },
+    {
+        "Skill Area": "Academics- OBE Level A",
+        "Sub Skills": [
+            "English - Reading comprehension",
+            "English - Grammar skills",
+            "English - Sentence construction",
+            "EVS - Chapter comprehension",
+            "EVS - Concept understanding",
+            "Numeracy/Maths - Arithmetic operations",
+            "Numeracy/Maths - Number concepts",
+            "Numeracy/Maths - Measurement and shapes"
+        ]
+    },
+    {
+        "Skill Area": "Functional Skills",
+        "Sub Skills": [
+            "Personal hygiene",
+            "Folding clothes",
+            "Filling water bottles",
+            "Packing your bag",
+            "Wiping",
+            "Group activities (turn taking, collaborative, guided play)"
+        ]
+    },
+    {
+        "Skill Area": "Art and Craft",
+        "Sub Skills": [
+            "Coping simple lines, drawings and shapes",
+            "Pasting",
+            "Folding (origami papers)",
+            "Cutting with scissors on the line (straight, zig zag lines)"
+        ]
+    },
+    {
+        "Skill Area": "Cooking without fire",
+        "Sub Skills": [
+            "Knowing names of various utensils in the kitchen",
+            "Knowing names of various ingredients",
+            "Pouring",
+            "Scooping"
+        ]
+    },
+    {
+        "Skill Area": "Extra curricular",
+        "Sub Skills": [
+            "Participation in cultural events",
+            "Sports activities",
+            "Group performances"
+        ]
+    }
+]
+
+2. Sameti Program
+Program
+[
+    {
+        "Skill Area": "Cognitive skills",
+        "Sub Skills": [
+            "Sorting",
+            "Sequencing",
+            "Pattern recognition",
+            "Mazes",
+            "Puzzles",
+            "Riddles",
+            "Categorization",
+            "Building attention span and memory",
+            "Making choices",
+            "Decision making",
+            "Understanding emotions"
+        ]
+    },
+    {
+        "Skill Area": "Communication skills",
+        "Sub Skills": [
+            "Gestures",
+            "Understanding body language",
+            "Greetings",
+            "Polite words",
+            "Starting and holding a conversation",
+            "Following instructions",
+            "Non verbal communication"
+        ]
+    },
+    {
+        "Skill Area": "Computer skills",
+        "Sub Skills": [
+            "Parts of a computer",
+            "Why do we need a computer",
+            "How to operate elements of a computer",
+            "Performing operations on a computer",
+            "Word processing (basic)"
+        ]
+    },
+    {
+        "Skill Area": "Functional academics skills",
+        "Sub Skills": [
+            "Reading",
+            "Written expression",
+            "Spellings",
+            "Language development (grammar and syntax)",
+            "Vocabulary building",
+            "Comprehension",
+            "Math (all basic operations)"
+        ]
+    },
+    {
+        "Skill Area": "General awareness",
+        "Sub Skills": [
+            "Personal hygiene",
+            "Personal grooming",
+            "Personal safety",
+            "Time",
+            "Money",
+            "Calendar (days and months)",
+            "Seasons",
+            "Community helpers",
+            "Good habits"
+        ]
+    },
+    {
+        "Skill Area": "Leisure",
+        "Sub Skills": [
+            "Arts and craft",
+            "Animal-assisted Activity (pet grooming)",
+            "Music",
+            "Dance",
+            "Painting",
+            "Theatre"
+        ]
+    },
+    {
+        "Skill Area": "Physical fitness",
+        "Sub Skills": [
+            "Yoga",
+            "Zumba",
+            "Physical education"
+        ]
+    },
+    {
+        "Skill Area": "Socio-behaviour",
+        "Sub Skills": [
+            "Understanding different situations",
+            "Social skills like boundaries",
+            "Personal space",
+            "Understanding appropriate and inappropriate behaviour and management",
+            "Restaurant, mall, school etiquettes"
+        ]
+    },
+    {
+        "Skill Area": "Prevoc Skills - Cooking and culinary",
+        "Sub Skills": [
+            "Identification of all basic utensils, vegetables, fruits, spices dals etc",
+            "Cutting vegetables specific to each dish, peeling vegetables",
+            "Rolling out chapatis and pooris",
+            "Looking for recipes online",
+            "Collecting all ingredients needed for the recipe",
+            "Prepping the kitchen",
+            "Fireless cooking",
+            "Boiling water on induction stove",
+            "Serving food",
+            "Setting up table for 2-3",
+            "Packing food",
+            "Cleaning the kitchen post cooking",
+            "Refilling provisions when over"
+        ]
+    },
+    {
+        "Skill Area": "Prevoc Skills - Art and craft",
+        "Sub Skills": [
+            "Basic drawing",
+            "Copying simple drawings",
+            "Colouring",
+            "Painting - with different medium",
+            "Craft work focusing on improving fine motor & imitation skills",
+            "Fill in colours appropriately in a given picture",
+            "Replicate simple 2-3 step craft items",
+            "Able to choose simple colour combinations"
+        ]
+    },
+    {
+        "Skill Area": "Prevoc Skills - Concepts",
+        "Sub Skills": [
+            "Concept of time, day and date",
+            "Reading Clock",
+            "Concept of money",
+            "Using calculator to do basic math operations",
+            "Shopping skills",
+            "Measurement of ingredients"
+        ]
+    },
+    {
+        "Skill Area": "Prevoc Skills - Admin and housekeeping",
+        "Sub Skills": [
+            "Identification of day & date on a document",
+            "Picking up files from shelves by matching name/number",
+            "Filing",
+            "Identifying & using paper clips, punching machine, stapler etc.",
+            "Photocopying",
+            "Filling papers into files",
+            "Use of calculator",
+            "Introduction to retail skills",
+            "Housekeeping"
+        ]
+    },
+    {
+        "Skill Area": "Prevoc Skills - Communication",
+        "Sub Skills": [
+            "Initiation of conversation",
+            "Maintenance of conversation",
+            "Turn taking",
+            "Making eye contact",
+            "Joint attention",
+            "Talking about a process in steps",
+            "Explaining the steps in sequence",
+            "Asking for help to complete a task",
+            "Listening skills",
+            "Following 2-3 step commands",
+            "Asking 'wh' questions to obtain information",
+            "Sentence expansion - using adjectives & adverbs",
+            "Working in a small group of 2-3 to complete an activity",
+            "Talking about self",
+            "Describing a given object",
+            "Conversational skills at different scenarios",
+            "Recalling & narrating past events"
+        ]
+    }
+]
+
+3. SIDDHI Program
+Program
+[
+    {
+        "Skill Area": "Readiness Skills",
+        "Sub Skills": []
+    },
+    {
+        "Skill Area": "Cognitive Functioning",
+        "Sub Skills": [
+            "Memory",
+            "Problem-solving skills",
+            "Reasoning skills",
+            "Visual perception & discrimination",
+            "Relevant cognitive awareness"
+        ]
+    },
+    {
+        "Skill Area": "Communication Skills",
+        "Sub Skills": [
+            "Receptive skills",
+            "Expressive skills",
+            "Apps for communication development"
+        ]
+    },
+    {
+        "Skill Area": "Pre-Academic Skills",
+        "Sub Skills": [
+            "Reading",
+            "Comprehension",
+            "Writing",
+            "Math skills"
+        ]
+    },
+    {
+        "Skill Area": "General awareness",
+        "Sub Skills": []
+    },
+    {
+        "Skill Area": "Reading and Comprehension",
+        "Sub Skills": []
+    },
+    {
+        "Skill Area": "Functional Math Skills",
+        "Sub Skills": []
+    },
+    {
+        "Skill Area": "Socio-Emotional Development",
+        "Sub Skills": []
+    }
+]
