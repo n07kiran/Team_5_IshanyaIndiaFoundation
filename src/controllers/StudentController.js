@@ -5,14 +5,33 @@ import { Student } from "../models/Student.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { sendEmail } from "../utils/Emails.js";
 import { appointmentRequestConfirmation } from "../utils/emailTemplates.js";
+import { Enrollment } from "../models/Enrollments.js";
 
 const getStudent = asyncHandler(async (req, res) => {
   //ignore certain fields : password, createdAt, updatedAt, __v,comments
-  const student = await Student.findById(req.user._id).select("-password -createdAt -updatedAt -__v -comments");
+  const student = await Student.findById(req.user._id)
+    .select("-password -createdAt -updatedAt -__v -comments -enrollmentDate -resetPasswordAttempts")
+    .populate([
+        { path: "primaryDiagnosis" }, // Populating primary diagnosis details
+        { path: "comorbidity" } // Populating comorbidities array
+    ]);
+
+    const enrollment = await Enrollment.findOne({ student: req.user._id })
+    .populate([
+        { path: "programs" }, // Fetching enrolled programs
+        { 
+            path: "educator", 
+            select: "firstName phoneNumber" // Fetching only firstName and phoneNumber
+        }, 
+        { 
+            path: "secondaryEducator", 
+            select: "firstName phoneNumber" // Fetching only firstName and phoneNumber
+        } // Fetching session details
+    ]);
   if(!student){
     throw new ApiError(404, "Student not found");
   }
-  return res.status(200).json(new ApiResponse(200, { student }, "Student fetched successfully"));
+  return res.status(200).json(new ApiResponse(200, { student,enrollment }, "Student fetched successfully"));
 })
 
 const requestAppointment = asyncHandler(async (req, res) => {
