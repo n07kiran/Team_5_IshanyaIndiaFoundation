@@ -12,7 +12,15 @@ import { Enrollment } from "../models/Enrollments.js";
 import { sendSMS } from "../utils/phone.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { JobApplication } from "../models/JobApplication.js";
+import { sendEmail } from "../utils/Emails.js";
 import mongoose from "mongoose";
+import { 
+  parentAppointmentScheduled,
+  employeeAppointmentScheduled,
+  newEmployeeWelcome,
+  newStudentWelcome
+} from "../utils/emailTemplates.js";
+import { DEFAULT_PASSWORD } from "../constants.js";
 
 const deleteEnrollment=asyncHandler(async(req,res,next)=>{
     const {_id}=req.body;
@@ -151,6 +159,19 @@ const updateJobApplication = asyncHandler(async (req, res, next) => {
             });
 
             await newEmployee.save();
+
+            // send email to employee
+            const mailDetailsToEmployee = {
+                toAddresses: [newEmployee.email],
+                subject: "Welcome to Ishanya Foundation",
+                html: newEmployeeWelcome(newEmployee, DEFAULT_PASSWORD)
+            };
+        
+            try{
+                await sendEmail(mailDetailsToEmployee);
+            }catch(error){
+                console.error("Failed to send welcome email:", error);
+            }
         }
 
         res.status(200).json({
@@ -446,13 +467,26 @@ const addStudent = asyncHandler(async (req, res, next) => {
             photo: photoUrl,
             enrollmentDate
         });
+
+        const mailDetailsToParent = {
+            toAddresses: [student.parentEmail || student.email],
+            subject: "Welcome to Ishanya Foundation - Student Account Created",
+            html: newStudentWelcome(student, DEFAULT_PASSWORD)
+        };
+
+        try {
+            await sendEmail(mailDetailsToParent);
+        } catch (error) {
+            console.error("Failed to send welcome email to student:", error);
+        }
+
+        // send back only the above fields:
+        return res.status(201).json(new ApiResponse(201, { student }, "Student added successfully"));
     }catch(error){
         console.log(error);
         throw new ApiError(400, "Student creation failed");
     }
-    // Example response
-    return res.status(201).json(new ApiResponse(201, { student }, "Student added successfully"));
-});
+})
 
 const getAppointments = asyncHandler(async (req,res,next)=>{
     const appointments = await Appointment.find({})
@@ -528,10 +562,30 @@ const scheduleAppointment = asyncHandler(async (req, res, next) => {
     // Assign employee to appointment
     appointment.employee = employee._id;
 
-    // TODO :  send email to employee and Parent
-
     appointment.status = "scheduled";
     await appointment.save();
+
+    // TODO :  send email to employee and Parent
+    const mailDetailsToEmployee = {
+        toAddresses: [employee.email],
+        subject: "New Student Appointment Scheduled",
+        html: employeeAppointmentScheduled(appointment, employee)
+    };
+
+    const mailDetailsToParent = {
+        toAddresses: [appointment.email],
+        subject: "Appointment Confirmation - Ishanya Foundation",
+        html: parentAppointmentScheduled(appointment, employee)
+    };
+
+    try {
+        await sendEmail(mailDetailsToEmployee);
+        await sendEmail(mailDetailsToParent);
+        console.log("Appointment scheduled and sent email successfully");
+    } catch (error) {
+        console.error("Failed to send appointment notification email:", error);
+        // in the final response send this error message
+    }
     return res.status(200).json(new ApiResponse(200, { appointment }, "Appointment scheduled successfully"));
 })
 
@@ -654,6 +708,20 @@ const addEmployee = asyncHandler(async (req, res, next) => {
         .populate("designation", "title")  // Only fetch title from designation
         .populate("department", "name")    // Only fetch name from department
         .populate("programs", "name");     // Only fetch name from programs
+
+
+    // send Welocm email to employee with DEFAULT PASSWORD
+    const mailDetailsToEmployee = {
+        toAddresses: [employee.email],
+        subject: "Welcome to Ishanya Foundation",
+        text: newEmployeeWelcome(employee, DEFAULT_PASSWORD)
+    };
+
+    try{
+        await sendEmail(mailDetailsToEmployee);
+    }catch(error){
+        console.error("Failed to send welcome email:", error);
+    }
 
     // Return success response
     return res

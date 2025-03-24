@@ -28,5 +28,8 @@ changes made -> updateEmployee,delete enrollment, changed login form of student 
 designed schema for storing documents of employee and reports
 
 task to do->
-finish changepassword, store files, report generation, work on analytics,
+store files, report generation, work on analytics,
 
+
+// Student Routes -> ChandraSekhar
+// Files, Email-> Kiran
