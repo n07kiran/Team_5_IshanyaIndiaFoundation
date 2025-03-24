@@ -5,6 +5,8 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import { Appointment } from "../models/Appointment.js";
 import { Enrollment } from "../models/Enrollments.js";
 import {JobApplication} from "../models/JobApplication.js";
+import { sendEmail } from "../utils/Emails.js";
+import { jobApplicationConfirmation } from "../utils/emailTemplates.js";
 
 const createJobApplication = asyncHandler(async (req, res) => {
     const {
@@ -113,6 +115,14 @@ const createJobApplication = asyncHandler(async (req, res) => {
     // Save to database
     try {
         const savedApplication = await jobApplication.save();
+
+        // Send confirmation email
+        await sendEmail({
+            toAddresses: [savedApplication.email],
+            subject: "Job Application Received - Ishanya Foundation",
+            html: jobApplicationConfirmation(savedApplication)
+        });
+
         res.status(201).json({
             message: "Job application submitted successfully",
             jobApplication: savedApplication

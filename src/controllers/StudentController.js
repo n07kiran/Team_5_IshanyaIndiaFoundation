@@ -3,6 +3,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Student } from "../models/Student.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { sendEmail } from "../utils/Emails.js";
+import { appointmentRequestConfirmation } from "../utils/emailTemplates.js";
 
 const getStudent = asyncHandler(async (req, res) => {
   //ignore certain fields : password, createdAt, updatedAt, __v,comments
@@ -43,6 +45,20 @@ const requestAppointment = asyncHandler(async (req, res) => {
 
       const newAppointment = new Appointment({ studentName, parentName, email, phone, date, time, message });
       await newAppointment.save();
+
+      // send email to parent
+      const mailDetailsToParent = {
+        toAddresses: [email],
+        subject: "Appointment Request Submitted - Ishanya Foundation",
+        html: appointmentRequestConfirmation(newAppointment)
+      };
+
+      try {
+        await sendEmail(mailDetailsToParent);
+      } catch (error) {
+        console.error("Failed to send appointment request confirmation email:", error);
+      }
+      
   
       res.status(201).json({ message: "Appointment request submitted successfully" });
     } catch (error) {
