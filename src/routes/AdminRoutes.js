@@ -19,6 +19,7 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
 import { upload } from "../middlewares/multer.middleware.js";
 
 import { verifyJWTAdmin } from "../middlewares/auth.middleware.js";
+import { changePassword } from "../controllers/AuthController.js";
 
 const AdminRouter = Router();
 
@@ -57,7 +58,11 @@ AdminRouter.post("/send_msg",verifyJWTAdmin,sendSMSAdmin);
 AdminRouter.get("/jobApplications",verifyJWTAdmin,getJobApplications);
 
 AdminRouter.post("/updateJobApplication",updateJobApplication);
+
 AdminRouter.post("/updateEmployee",upload.single("photo"),updateEmployee);
 
 AdminRouter.post("/deleteEnrollment",deleteEnrollment)
+
+AdminRouter.post("/changePassword",verifyJWTAdmin, changePassword);
+
 export default AdminRouter;

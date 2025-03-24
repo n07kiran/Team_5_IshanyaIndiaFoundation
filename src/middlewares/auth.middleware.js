@@ -26,6 +26,7 @@ export const verifyJWTStudent = asyncHandler(async (req,res,next) => {
         throw new ApiError(401,"Invalid student Access Token")
     }
 
+    user.role = decodedUser.role; // do I need to add role to Studentmodel Schema ?
     req.user = user;
     return next();
 })

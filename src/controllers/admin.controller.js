@@ -231,36 +231,36 @@ const getEnrollments = asyncHandler(async (req, res, next) => {
 
 
 const enrollStudent = asyncHandler(async (req, res, next) => {
-    const { student, programs, educator, secondaryEducator, level, status , sessions } = req.body;
+    const { student_id, program_ids, educator_id, secondaryEducator_id, level, status , sessions } = req.body;
 
-    const existStudent = await Student.findById(student._id);
+    const existStudent = await Student.findById(student_id);
 
     if(!existStudent){
         throw new ApiError(404, "Student not found");
     }
     
     // check if programs is an >0
-    if(programs.length === 0){
+    if(program_ids.length === 0){
         throw new ApiError(400, "Programs are required");
     }
 
     // check for each program in programs model
-    for(const program of programs){
-        const existProgram = await Program.findById(program._id);
+    for(const programId of program_ids){
+        const existProgram = await Program.findById(programId);
         if(!existProgram){
-            throw new ApiError(404, "Program not found");
+            throw new ApiError(404, `Program with id ${programId} not found`);
         }
     }
 
     // check if employee exists in employee model
-    const existEducator = await Employee.findById(educator._id);
+    const existEducator = await Employee.findById(educator_id);
     if(!existEducator){
         throw new ApiError(404, "Educator not found");
     }
 
     // check if secondary educator exists in employee model
-    if(secondaryEducator){
-        const existSecondaryEducator = await Employee.findById(secondaryEducator._id);
+    if(secondaryEducator_id){
+        const existSecondaryEducator = await Employee.findById(secondaryEducator_id);
         if(!existSecondaryEducator){
             throw new ApiError(404, "Secondary educator not found");
         }
@@ -278,14 +278,26 @@ const enrollStudent = asyncHandler(async (req, res, next) => {
     }
 
     // save enrollment in db
-    const enrollment = await Enrollment.create({ student, programs, educator, secondaryEducator, level, status });
+    const enrollment = await Enrollment.create({ 
+        student: student_id, 
+        programs: program_ids, 
+        educator: educator_id, 
+        secondaryEducator: secondaryEducator_id, 
+        level, 
+        status 
+    });
 
-    await enrollment.populate("student", "_id name");
-    await enrollment.populate("programs", "_id name");
-    await enrollment.populate("educator", "_id name photo");
-    await enrollment.populate("secondaryEducator", "_id name photo");
+    // Fix population to match schema relationships
+    await enrollment.populate([
+        { path: "student", select: "_id name" },
+        { path: "programs", select: "_id name" },
+        { path: "educator", select: "_id name photo" },
+        { path: "secondaryEducator", select: "_id name photo" }
+    ]);
 
-    return res.status(200).json(new ApiResponse(200, { enrollment }, "Student enrolled successfully"));
+    return res
+    .status(200)
+    .json(new ApiResponse(200, { enrollment }, "Student enrolled successfully"));
 })
 
 const addStudent = asyncHandler(async (req, res, next) => {
@@ -439,7 +451,7 @@ const addStudent = asyncHandler(async (req, res, next) => {
         throw new ApiError(400, "Student creation failed");
     }
     // Example response
-    return res.status(201).json(new ApiResponse(201, {}, "Student added successfully"));
+    return res.status(201).json(new ApiResponse(201, { student }, "Student added successfully"));
 });
 
 const getAppointments = asyncHandler(async (req,res,next)=>{
@@ -908,7 +920,7 @@ const sendSMSAdmin = async (req, res) => {
         details: error.message,
       });
     }
-  };
+};
 
 export { 
     getAppointments, 
