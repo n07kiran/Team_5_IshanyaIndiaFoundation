@@ -12,40 +12,88 @@ import { StudentDocument } from "../models/StudentDoc.js";
 import { Student } from "../models/Student.js";
 
 
-const uploadReport = asyncHandler(async (req, res) => {
+const getReportDetails = asyncHandler(async (req, res, next) => {
     try {
-        const { studentId, studentName, reportDate, weekNumber, categories, teacherComments, studentImageUrl } = req.body;
-        const jsonData = req.body;
+        const { enrollmentId } = req.body;
 
-        // Validation
-        if (!studentId) {
-            return res.status(400).json({ message: "Student ID is required" });
+        // Fetch the enrollment details
+        const enrollment = await Enrollment.findById(enrollmentId)
+            .populate({ path: "programs", select: "_id name" }); // Fetching only Program ID and name
+
+        if (!enrollment) {
+            return res.status(404).json({ message: "Enrollment not found" });
         }
 
-        // Generate filename
-        const fileName = `report-${studentId}-week${weekNumber}-${Date.now()}.pdf`;
+        // Extract program IDs from enrollment
+        const programIds = enrollment.programs.map((program) => program._id);
+
+        // Fetch skill areas related to the enrolled programs
+        const skillAreas = await SkillArea.find({ program_id: { $in: programIds } })
+            .select("_id name description program_id");
+
+        // Extract skill area IDs
+        const skillAreaIds = skillAreas.map((skill) => skill._id);
+
+        // Fetch subtasks related to these skill areas
+        const subTasks = await SubTask.find({ skill_area_id: { $in: skillAreaIds } })
+            .select("_id name description skill_area_id");
+
+        return res.status(200).json({
+            programs: enrollment.programs,
+            skillAreas,
+            subTasks,
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+const uploadReport = asyncHandler(async (req, res) => {
+    try {
+        const { enrollmentId, reportDate, weekNumber, categories, teacherComments } = req.body;
+
+        if (!enrollmentId || !reportDate || !weekNumber || !categories || !Array.isArray(categories)) {
+            throw new Error("Invalid request format. Missing required fields.");
+        }
+
+        for (const category of categories) {
+            const { categoryId, subTasks } = category;
+
+            if (!categoryId || !subTasks || !Array.isArray(subTasks)) continue;
+
+            for (const subTask of subTasks) {
+                const { subTaskId, score, description, week, month } = subTask;
+
+                if (!subTaskId || score === undefined) continue;
+
+                const scoreCardEntry = new ScoreCard({
+                    enrollment_id: enrollmentId,
+                    skill_area_id: categoryId,
+                    sub_task_id: subTaskId,
+                    month:month,
+                    week: week,
+                    score,
+                    description
+                });
+
+                await scoreCardEntry.save();
+            }
+        }
+
+        const fileName = `report-${enrollmentId}-week${weekNumber}-${Date.now()}.pdf`;
         const filePath = `uploads/${fileName}`;
 
-        // Ensure uploads directory exists
         if (!fs.existsSync('uploads')) {
             fs.mkdirSync('uploads', { recursive: true });
         }
 
-        // Create PDF document
-        const doc = new PDFDocument({
-            margins: {
-                top: 50,
-                bottom: 50,
-                left: 50,
-                right: 50
-            },
-            size: 'A4'
-        });
-
+        const doc = new PDFDocument({ margins: { top: 50, bottom: 50, left: 50, right: 50 }, size: 'A4' });
         const writeStream = fs.createWriteStream(filePath);
         doc.pipe(writeStream);
 
-        // Professional color scheme
+        // Color Scheme
         const colors = {
             primary: '#1e3a8a',
             secondary: '#3b82f6',
@@ -58,303 +106,138 @@ const uploadReport = asyncHandler(async (req, res) => {
             background: '#f9fafb'
         };
 
-        // Header with school logo/branding
+        // Header
         doc.rect(0, 0, doc.page.width, 120).fill(colors.primary);
+        doc.fillColor('white').fontSize(24).font('Helvetica-Bold').text('STUDENT PROGRESS REPORT', 50, 50, { align: 'center' });
+        doc.fillColor('white').fontSize(14).font('Helvetica').text(`Week ${weekNumber} - ${reportDate}`, 50, 80, { align: 'center' });
 
-        // Title and date section
-        doc.fillColor('white')
-            .fontSize(24)
-            .font('Helvetica-Bold')
-            .text('STUDENT PROGRESS REPORT', 50, 50, { align: 'center' });
+        // Student Info
+        doc.rect(50, 130, doc.page.width - 100, 80).fill(colors.accent).stroke(colors.secondary);
+        doc.fillColor(colors.text).fontSize(16).font('Helvetica-Bold').text(`Enrollment ID: ${enrollmentId}`, 70, 150);
+        doc.fillColor(colors.lightText).fontSize(12).font('Helvetica').text(`Report Date: ${reportDate}`, 70, 175);
 
-        doc.fillColor('white')
-            .fontSize(14)
-            .font('Helvetica')
-            .text(`Week ${weekNumber} - ${reportDate || new Date().toISOString().split('T')[0]}`, 50, 80, { align: 'center' });
+        let yPosition = 230;
+        let totalScore = 0;
+        let totalTasks = 0;
 
-        // Student information section
-        doc.rect(50, 130, doc.page.width - 100, 120).fill(colors.accent).stroke(colors.secondary);
-
-        // Student details - adjusted positioning
-        const studentInfoX = 70; // Removed studentImageUrl logic
-
-        doc.fillColor(colors.text)
-            .fontSize(16)
-            .font('Helvetica-Bold')
-            .text(`Student: ${studentName || 'Name Not Provided'}`, studentInfoX, 150);
-
-        doc.fillColor(colors.lightText)
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Student ID: ${studentId}`, studentInfoX, 175);
-
-        doc.fillColor(colors.lightText)
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Report Date: ${reportDate || new Date().toLocaleDateString()}`, studentInfoX, 195);
-
-        let yPosition = 280;
-
-        // Overall progress summary
-        if (jsonData.overallProgress) {
-            doc.rect(50, yPosition, doc.page.width - 100, 100).fill('white').stroke(colors.secondary);
-
-            doc.fillColor(colors.primary)
-                .fontSize(16)
-                .font('Helvetica-Bold')
-                .text('OVERALL PROGRESS', 70, yPosition + 20);
-
-            const avgScore = jsonData.overallProgress.weeklyAverage || 0;
-            let scoreColor = colors.warning;
-
-            if (avgScore >= 4) {
-                scoreColor = colors.success;
-            } else if (avgScore <= 2) {
-                scoreColor = colors.danger;
-            }
-
-            doc.fillColor(colors.text)
-                .fontSize(12)
-                .font('Helvetica')
-                .text(`Weekly Average:`, 70, yPosition + 50);
-
-            doc.fillColor(scoreColor)
-                .fontSize(14)
-                .font('Helvetica-Bold')
-                .text(`${avgScore}/5`, 180, yPosition + 50);
-
-            const change = jsonData.overallProgress.changeFromLastWeek || 0;
-            const changeText = change >= 0 ? `+${change}` : `${change}`;
-            const changeColor = change >= 0 ? colors.success : colors.danger;
-
-            doc.fillColor(colors.text)
-                .fontSize(12)
-                .font('Helvetica')
-                .text(`Change from Last Week:`, 250, yPosition + 50);
-
-            doc.fillColor(changeColor)
-                .fontSize(14)
-                .font('Helvetica-Bold')
-                .text(changeText, 400, yPosition + 50);
-
-            yPosition += 120;
-        }
-
-        // Categories and skills
-        if (categories && Array.isArray(categories)) {
-            categories.forEach(category => {
-                if (yPosition > doc.page.height - 200) {
-                    doc.addPage();
-                    yPosition = 50;
-                }
-
-                doc.rect(50, yPosition, doc.page.width - 100, 40).fill(colors.secondary);
-
-                doc.fillColor('white')
-                    .fontSize(14)
-                    .font('Helvetica-Bold')
-                    .text(category.categoryName.toUpperCase(), 70, yPosition + 15);
-
-                yPosition += 50;
-
-                if (category.subTasks && Array.isArray(category.subTasks)) {
-                    const col1Width = 220;
-                    const col2Width = 60;
-                    const col3Width = 110;
-
-                    doc.rect(50, yPosition, doc.page.width - 100, 30).fill(colors.accent).stroke(colors.secondary);
-
-                    doc.fillColor(colors.text)
-                        .fontSize(12)
-                        .font('Helvetica-Bold')
-                        .text("SKILL", 70, yPosition + 10);
-
-                    doc.fillColor(colors.text)
-                        .fontSize(12)
-                        .font('Helvetica-Bold')
-                        .text("SCORE", 70 + col1Width, yPosition + 10);
-
-                    doc.fillColor(colors.text)
-                        .fontSize(12)
-                        .font('Helvetica-Bold')
-                        .text("RATING", 70 + col1Width + col2Width, yPosition + 10);
-
-                    yPosition += 40;
-
-                    category.subTasks.forEach((task, index) => {
-                        if (yPosition > doc.page.height - 100) {
-                            doc.addPage();
-                            yPosition = 50;
-                            doc.rect(50, yPosition, doc.page.width - 100, 30).fill(colors.accent).stroke(colors.secondary);
-                            doc.fillColor(colors.text)
-                                .fontSize(12)
-                                .font('Helvetica-Bold')
-                                .text("SKILL", 70, yPosition + 10);
-                            doc.fillColor(colors.text)
-                                .fontSize(12)
-                                .font('Helvetica-Bold')
-                                .text("SCORE", 70 + col1Width, yPosition + 10);
-                            doc.fillColor(colors.text)
-                                .font('Helvetica-Bold')
-                                .text("RATING", 7+ col1Width + col2Width, yPosition + 10);
-                                yPosition += 40;
-                            }
-    
-                            const isEvenRow = index % 2 === 0;
-                            const rowHeight = task.description ? 60 : 30;
-    
-                            doc.rect(50, yPosition - 5, doc.page.width - 100, rowHeight)
-                                .fill(isEvenRow ? 'white' : colors.background)
-                                .stroke(colors.secondary);
-    
-                            doc.fillColor(colors.text)
-                                .fontSize(11)
-                                .font('Helvetica')
-                                .text(task.subTaskName, 70, yPosition, {
-                                    width: col1Width - 10,
-                                    ellipsis: true
-                                });
-    
-                            doc.fillColor(colors.text)
-                                .fontSize(11)
-                                .font('Helvetica-Bold')
-                                .text(`${task.score}/5`, 70 + col1Width, yPosition);
-    
-                            let ratingColor;
-                            let ratingText;
-    
-                            if (task.score === 5) {
-                                ratingColor = colors.success;
-                                ratingText = "Excellent";
-                            } else if (task.score === 4) {
-                                ratingColor = '#34d399';
-                                ratingText = "Very Good";
-                            } else if (task.score === 3) {
-                                ratingColor = colors.warning;
-                                ratingText = "Satisfactory";
-                            } else if (task.score === 2) {
-                                ratingColor = '#fb923c';
-                                ratingText = "Needs Work";
-                            } else {
-                                ratingColor = colors.danger;
-                                ratingText = "Struggling";
-                            }
-    
-                            doc.fillColor(ratingColor)
-                                .fontSize(11)
-                                .font('Helvetica-Bold')
-                                .text(ratingText, 70 + col1Width + col2Width, yPosition);
-    
-                            if (task.description) {
-                                doc.fillColor(colors.lightText)
-                                    .fontSize(10)
-                                    .font('Helvetica-Oblique')
-                                    .text(`Remarks: ${task.description}`, 70, yPosition + 20, {
-                                        width: doc.page.width - 140,
-                                        align: 'left'
-                                    });
-                            }
-    
-                            yPosition += rowHeight + 10;
-                        });
-    
-                        yPosition += 20;
-                    }
-                });
-            }
-    
-            if (yPosition > doc.page.height - 150) {
+        for (const category of categories) {
+            if (yPosition > doc.page.height - 200) {
                 doc.addPage();
                 yPosition = 50;
             }
-    
-            if (teacherComments) {
-                doc.rect(50, yPosition, doc.page.width - 100, 150).fill('white').stroke(colors.secondary);
-    
-                doc.fillColor(colors.primary)
-                    .fontSize(14)
-                    .font('Helvetica-Bold')
-                    .text('TEACHER COMMENTS', 70, yPosition + 15);
-    
-                doc.fillColor(colors.text)
-                    .fontSize(11)
-                    .font('Helvetica')
-                    .text(teacherComments, 70, yPosition + 40, {
-                        width: doc.page.width - 140,
-                        align: 'left'
-                    });
-    
-                yPosition += 160;
-            }
-    
-            doc.rect(50, yPosition, (doc.page.width - 100) / 2 - 10, 100).fill('white').stroke(colors.secondary);
-            doc.rect(50 + (doc.page.width - 100) / 2 + 10, yPosition, (doc.page.width - 100) / 2 - 10, 100).fill('white').stroke(colors.secondary);
-            doc.end();
-    
-            writeStream.on("finish", async () => {
-                try {
-                    const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
-                        resource_type: "auto",
-                        folder: "reports",
-                        type: "upload"
-                    });
-    
-                    fs.unlinkSync(filePath);
-    
-                    const newDocument = new StudentDocument({
-                        studentId,
-                        documentType: "67e013547a0003be684c01db",
-                        filePath: cloudinaryResponse.secure_url,
-                        fileName: `Weekly Report - Week ${weekNumber} - ${reportDate || new Date().toISOString().split('T')[0]}`,
-                        metadata: {
-                            weekNumber,
-                            categories: categories.map(cat => cat.categoryName),
-                            reportDate: new Date()
-                        }
-                    });
-    
-                    await newDocument.save();
-    
-                    res.json({
-                        success: true,
-                        message: "Report generated, uploaded, and saved successfully",
-                        pdfUrl: cloudinaryResponse.secure_url,
-                        documentId: newDocument._id
-                    });
-                } catch (uploadError) {
-                    console.error("Error during upload:", uploadError);
-                    if (fs.existsSync(filePath)) {
-                        fs.unlinkSync(filePath);
-                    }
-                    res.status(500).json({
-                        success: false,
-                        message: "Error uploading document",
-                        error: uploadError.message
-                    });
+
+            const categoryData = await SkillArea.findById(category.categoryId);
+            const categoryName = categoryData ? categoryData.name : 'Unknown Category';
+
+            doc.rect(50, yPosition, doc.page.width - 100, 40).fill(colors.secondary).stroke(colors.secondary);
+            doc.fillColor('white').fontSize(14).font('Helvetica-Bold').text(categoryName.toUpperCase(), 70, yPosition + 15);
+            yPosition += 50;
+
+            const col1Width = 250;
+            const col2Width = 100;
+
+            // Table Headers
+            doc.rect(50, yPosition, doc.page.width - 100, 30).fill(colors.accent).stroke(colors.secondary);
+            doc.fillColor(colors.text).fontSize(12).font('Helvetica-Bold').text("Subtask", 70, yPosition + 10);
+            doc.fillColor(colors.text).fontSize(12).font('Helvetica-Bold').text("Score", 70 + col1Width, yPosition + 10);
+            yPosition += 30;
+
+            for (const subTask of category.subTasks) {
+                if (yPosition > doc.page.height - 100) {
+                    doc.addPage();
+                    yPosition = 50;
+
+                    // Table Headers on new page
+                    doc.rect(50, yPosition, doc.page.width - 100, 30).fill(colors.accent).stroke(colors.secondary);
+                    doc.fillColor(colors.text).fontSize(12).font('Helvetica-Bold').text("Subtask", 70, yPosition + 10);
+                    doc.fillColor(colors.text).fontSize(12).font('Helvetica-Bold').text("Score", 70 + col1Width, yPosition + 10);
+                    yPosition += 30;
                 }
-            });
-    
-            writeStream.on("error", (writeError) => {
-                console.error("Error writing PDF:", writeError);
-                res.status(500).json({
-                    success: false,
-                    message: "Error generating PDF",
-                    error: writeError.message
-                });
-            });
-    
-        } catch (error) {
-            console.error("Error processing report:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error processing report",
-                error: error.message
-            });
+
+                const subTaskData = await SubTask.findById(subTask.subTaskId);
+                const subTaskName = subTaskData ? subTaskData.name : 'Unknown Subtask';
+
+                doc.rect(50, yPosition - 5, doc.page.width - 100, 30).fill(colors.background).stroke(colors.secondary);
+                doc.fillColor(colors.text).fontSize(12).font('Helvetica').text(subTaskName, 70, yPosition);
+
+                // Score color-coding
+                let scoreColor = colors.text;
+                if (subTask.score >= 4) scoreColor = colors.success;
+                else if (subTask.score === 3) scoreColor = colors.warning;
+                else if (subTask.score <= 2) scoreColor = colors.danger;
+
+                doc.fillColor(scoreColor).fontSize(12).font('Helvetica-Bold').text(`${subTask.score}/5`, 70 + col1Width, yPosition);
+
+                if (subTask.description) {
+                    yPosition += 20;
+                    doc.fillColor(colors.lightText).fontSize(10).font('Helvetica-Oblique')
+                        .text(`Remarks: ${subTask.description}`, 70, yPosition);
+                }
+
+                yPosition += 30;
+                totalScore += subTask.score;
+                totalTasks++;
+            }
+
+            yPosition += 10;
         }
-    });
+
+        // Rating Section
+        doc.rect(50, yPosition, doc.page.width - 100, 60).fill(colors.accent).stroke(colors.secondary);
+        doc.fillColor(colors.text).fontSize(14).font('Helvetica-Bold').text("Overall Rating:", 70, yPosition + 15);
+
+        let rating = "Needs Improvement";
+        if (totalTasks > 0) {
+            const avgScore = totalScore / totalTasks;
+            if (avgScore >= 4) rating = "Excellent";
+            else if (avgScore >= 3) rating = "Good";
+            else if (avgScore >= 2) rating = "Satisfactory";
+        }
+
+        doc.fillColor(colors.primary).fontSize(14).font('Helvetica-Bold').text(rating, 200, yPosition + 15);
+        yPosition += 60;
+
+        doc.end();
+
+        writeStream.on("finish", async () => {
+            try {
+                const cloudinaryResponse = await cloudinary.uploader.upload(filePath, {
+                    resource_type: "auto",
+                    folder: "reports",
+                    type: "upload"
+                });
+
+                fs.unlinkSync(filePath);
+
+                const sId = await Enrollment.findById(enrollmentId).populate("student");
+
+                const newDocument = new StudentDocument({
+                    studentId: sId,
+                    documentType: "67e013547a0003be684c01db",
+                    filePath: cloudinaryResponse.secure_url,
+                    fileName: `Weekly Report - Week ${weekNumber} - ${reportDate}`,
+                    metadata: { weekNumber, categories: categories.map(cat => cat.categoryId), reportDate: new Date() }
+                });
+
+                await newDocument.save();
+
+                res.json({ success: true, message: "Report uploaded successfully", pdfUrl: cloudinaryResponse.secure_url, documentId: newDocument._id });
+            } catch (uploadError) {
+                res.status(500).json({ success: false, message: "Error uploading document", error: uploadError.message });
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error processing report", error: error.message });
+    }
+});
+
   
 import { sendEmail } from "../utils/Emails.js";
 import { jobApplicationConfirmation } from "../utils/emailTemplates.js";
+import { SubTask } from "../models/SubTask.js";
+import { SkillArea } from "../models/SkillArea.js";
+import ScoreCard from "../models/ScoreCard.js";
 
 const createJobApplication = asyncHandler(async (req, res) => {
     const {
@@ -622,5 +505,6 @@ export {
     getEmployee,
     getEnrollments,
     createJobApplication,
-    uploadReport
+    uploadReport,
+    getReportDetails
  };
