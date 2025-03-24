@@ -97,6 +97,16 @@ const employeeSchema = new Schema(
             type: String,
             enum: ["admin", "employee"],
             default: "employee"
+        },
+        resetPasswordOTP: {
+            type: Number
+        },
+        resetPasswordExpires: {
+            type: Date
+        },
+        resetPasswordAttempts: {
+            type: Number,
+            default: 0
         }
     },
     {

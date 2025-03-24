@@ -109,6 +109,16 @@ const studentSchema = new Schema(
         password: {
             type: String,
             default: generateHashedPasswordSync(DEFAULT_PASSWORD)
+        },
+        resetPasswordOTP: {
+            type: Number
+        },
+        resetPasswordExpires: {
+            type: Date
+        },
+        resetPasswordAttempts: {
+            type: Number,
+            default: 0
         }
     },
     {

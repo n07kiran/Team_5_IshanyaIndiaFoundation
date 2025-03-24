@@ -53,13 +53,13 @@ const requestAppointment = asyncHandler(async (req, res) => {
   
 const loginStudent = asyncHandler(async (req, res, next) => {
 
-  const { studentId, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!studentId) {
-      throw new ApiError(400, "studentId is required!");
+  if (!email) {
+      throw new ApiError(400, "Email is required!");
   }
 
-  const student = await Student.findOne({ studentID:studentId });
+  const student = await Student.findOne({ email:email });
 
   if (!student) {
       throw new ApiError(404, "student does not exist");
@@ -84,7 +84,7 @@ const loginStudent = asyncHandler(async (req, res, next) => {
       .json(
           new ApiResponse(
               200,
-              { student : student.studentID, accessToken },
+              { student : {_id:student._id, studentID:student.studentID,email:student.email}, accessToken },
               "Student/Parent logged in successfully"
           )
       );
