@@ -5,6 +5,7 @@ import { loginEmployee, logoutEmployee,
     getEnrollments,
     createJobApplication,
     uploadReport,
+    getReportDetails,
  } from "../controllers/EmployeeController.js";
 import { verifyJWTEmployee } from "../middlewares/auth.middleware.js";
 import { updateAppointment } from "../controllers/admin.controller.js";
@@ -28,9 +29,11 @@ EmployeeRouter.post("/logout", verifyJWTEmployee, logoutEmployee);
 EmployeeRouter.get("/myEnrollments",verifyJWTEmployee, getEnrollments);
 EmployeeRouter.post("/job_application",createJobApplication);
 
-
-EmployeeRouter.post("/uploadReport",uploadReport);
 // Password 
 EmployeeRouter.post("/changePassword", verifyJWTEmployee, changePassword);
+
+//reports
+EmployeeRouter.get("/report",getReportDetails)
+EmployeeRouter.post("/uploadReport",uploadReport);
 
 export default EmployeeRouter;
