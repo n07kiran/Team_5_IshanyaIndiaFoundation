@@ -833,7 +833,7 @@ const sendSMSAdmin = async (req, res) => {
         details: error.message,
       });
     }
-  };
+};
 
 export { 
     getAppointments, 

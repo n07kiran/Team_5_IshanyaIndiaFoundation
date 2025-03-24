@@ -21,6 +21,12 @@ document files->id proof,re
 4. Update emploee -> admin
 5. Schema
 6. Student
+7. email
 
+//ChandraSekhar
+changes made -> updateEmployee,delete enrollment, changed login form of student from id to email,
+designed schema for storing documents of employee and reports
 
+task to do->
+finish changepassword, store files, report generation, work on analytics,
 
