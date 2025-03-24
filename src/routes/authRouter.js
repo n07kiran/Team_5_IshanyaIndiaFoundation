@@ -6,6 +6,7 @@ import {
 } from "../controllers/AuthController.js";
 // import { verifyJWT } from "../middlewares/auth.middleware.js";
 
+
 const authRouter = Router();
 
 // Public routes
