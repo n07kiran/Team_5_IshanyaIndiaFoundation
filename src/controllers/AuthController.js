@@ -33,7 +33,7 @@ const sendPasswordResetOTP = asyncHandler(async (req, res) => {
 
     user.resetPasswordOTP = otp;
     user.resetPasswordExpires = otpExpiry;
-    await user.save();
+    await user.save({validateBeforeSave: false});
 
     await sendEmail({
         toAddresses: [email],
@@ -68,7 +68,7 @@ const resetPasswordWithOTP = asyncHandler(async (req, res) => {
 
     if (user.resetPasswordOTP !== Number(otp) || Date.now() > user.resetPasswordExpires) {
         user.resetPasswordAttempts += 1;
-        await user.save();
+        await user.save({validateBeforeSave: false});
         throw new ApiError(401, "Invalid or expired OTP");
     }
 
@@ -76,7 +76,7 @@ const resetPasswordWithOTP = asyncHandler(async (req, res) => {
     user.resetPasswordOTP = undefined;
     user.resetPasswordExpires = undefined;
     user.resetPasswordAttempts = 0;
-    await user.save();
+    await user.save({validateBeforeSave: false});
 
     return res.status(200).json(
         new ApiResponse(200, {}, "Password updated successfully")
