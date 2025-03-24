@@ -4,8 +4,8 @@ import { loginEmployee, logoutEmployee,
     getEmployee,
     getEnrollments,
     createJobApplication,
+    uploadReport,
  } from "../controllers/EmployeeController.js";
-import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWTEmployee } from "../middlewares/auth.middleware.js";
 import { updateAppointment } from "../controllers/admin.controller.js";
 import { changePassword } from "../controllers/AuthController.js";
@@ -28,6 +28,8 @@ EmployeeRouter.post("/logout", verifyJWTEmployee, logoutEmployee);
 EmployeeRouter.get("/myEnrollments",verifyJWTEmployee, getEnrollments);
 EmployeeRouter.post("/job_application",createJobApplication);
 
+
+EmployeeRouter.post("/uploadReport",uploadReport);
 // Password 
 EmployeeRouter.post("/changePassword", verifyJWTEmployee, changePassword);
 
