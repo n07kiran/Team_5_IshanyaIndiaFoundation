@@ -33,7 +33,7 @@ EmployeeRouter.post("/job_application",createJobApplication);
 EmployeeRouter.post("/changePassword", verifyJWTEmployee, changePassword);
 
 //reports
-EmployeeRouter.get("/report",getReportDetails)
+EmployeeRouter.get("/report/:enrollmentId",getReportDetails)
 EmployeeRouter.post("/uploadReport",uploadReport);
 
 export default EmployeeRouter;
