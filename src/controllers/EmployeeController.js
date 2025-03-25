@@ -14,7 +14,7 @@ import { Student } from "../models/Student.js";
 
 const getReportDetails = asyncHandler(async (req, res, next) => {
     try {
-        const { enrollmentId } = req.body;
+        const { enrollmentId } = req.params;
 
         // Fetch the enrollment details
         const enrollment = await Enrollment.findById(enrollmentId)
