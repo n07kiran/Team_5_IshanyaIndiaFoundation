@@ -4,12 +4,12 @@ import { loginEmployee, logoutEmployee,
     getEmployee,
     getEnrollments,
     createJobApplication,
-    uploadReport,
-    getReportDetails,
+    uploadReport
  } from "../controllers/EmployeeController.js";
 import { verifyJWTEmployee } from "../middlewares/auth.middleware.js";
 import { updateAppointment } from "../controllers/admin.controller.js";
 import { changePassword } from "../controllers/AuthController.js";
+import { getFullEnrollment, addReport } from "../controllers/StudentReportsControllers.js";
 
 const EmployeeRouter = Router();
 
@@ -33,7 +33,7 @@ EmployeeRouter.post("/job_application",createJobApplication);
 EmployeeRouter.post("/changePassword", verifyJWTEmployee, changePassword);
 
 //reports
-EmployeeRouter.get("/report/:enrollmentId",verifyJWTEmployee,getReportDetails)
-EmployeeRouter.post("/uploadReport",verifyJWTEmployee,uploadReport);
+EmployeeRouter.get("/SkilleAreaAndSubtaks/:enrollmentId",verifyJWTEmployee,getFullEnrollment)
+EmployeeRouter.post("/scoreCard",verifyJWTEmployee,addReport);
 
 export default EmployeeRouter;

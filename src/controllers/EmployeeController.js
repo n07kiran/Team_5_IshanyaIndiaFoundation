@@ -11,45 +11,6 @@ import { cloudinary } from "../utils/cloudinary.js";
 import { StudentDocument } from "../models/StudentDoc.js";
 import { Student } from "../models/Student.js";
 
-
-const getReportDetails = asyncHandler(async (req, res, next) => {
-    try {
-        const { enrollmentId } = req.params;
-
-        // Fetch the enrollment details
-        const enrollment = await Enrollment.findById(enrollmentId)
-            .populate({ path: "programs", select: "_id name" }); // Fetching only Program ID and name
-
-        if (!enrollment) {
-            return res.status(404).json({ message: "Enrollment not found" });
-        }
-
-        // Extract program IDs from enrollment
-        const programIds = enrollment.programs.map((program) => program._id);
-
-        // Fetch skill areas related to the enrolled programs
-        const skillAreas = await SkillArea.find({ program_id: { $in: programIds } })
-            .select("_id name description program_id");
-
-        // Extract skill area IDs
-        const skillAreaIds = skillAreas.map((skill) => skill._id);
-
-        // Fetch subtasks related to these skill areas
-        const subTasks = await SubTask.find({ skill_area_id: { $in: skillAreaIds } })
-            .select("_id name description skill_area_id");
-
-        return res.status(200).json({
-            programs: enrollment.programs,
-            skillAreas,
-            subTasks,
-        });
-
-    } catch (error) {
-        next(error);
-    }
-});
-
-
 const uploadReport = asyncHandler(async (req, res) => {
     try {
         const { enrollmentId, reportDate, weekNumber, categories, teacherComments } = req.body;
@@ -237,7 +198,6 @@ import { sendEmail } from "../utils/Emails.js";
 import { jobApplicationConfirmation } from "../utils/emailTemplates.js";
 import { SubTask } from "../models/SubTask.js";
 import { SkillArea } from "../models/SkillArea.js";
-import ScoreCard from "../models/ScoreCard.js";
 
 const createJobApplication = asyncHandler(async (req, res) => {
     const {
@@ -505,6 +465,5 @@ export {
     getEmployee,
     getEnrollments,
     createJobApplication,
-    uploadReport,
-    getReportDetails
+    uploadReport
  };
