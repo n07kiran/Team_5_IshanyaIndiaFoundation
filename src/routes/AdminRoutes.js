@@ -15,6 +15,9 @@ import { getAppointments, loginAdmin, logoutAdmin, addEmployee,
     updateJobApplication,
     updateEmployee,
     deleteEnrollment,
+    addEmployeeDocument,
+    getDocumentTypes,
+    getEmployeeDocuments
 } from "../controllers/admin.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -60,7 +63,9 @@ AdminRouter.get("/jobApplications",verifyJWTAdmin,getJobApplications);
 AdminRouter.post("/updateJobApplication",updateJobApplication);
 
 AdminRouter.post("/updateEmployee",upload.single("photo"),updateEmployee);
-
+AdminRouter.post("/EmployeeDocuments",upload.any(),addEmployeeDocument);
+AdminRouter.get("/EmployeeDocument/:employeeId",getEmployeeDocuments);
+AdminRouter.get("/documentTypes",getDocumentTypes);
 AdminRouter.post("/deleteEnrollment",deleteEnrollment)
 
 AdminRouter.post("/changePassword",verifyJWTAdmin, changePassword);
