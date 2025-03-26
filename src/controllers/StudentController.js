@@ -6,6 +6,30 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { sendEmail } from "../utils/Emails.js";
 import { appointmentRequestConfirmation } from "../utils/emailTemplates.js";
 import { Enrollment } from "../models/Enrollments.js";
+import { ScoreCard } from "../models/ScoreCard.js";
+
+const getStudentReports = asyncHandler(async (req, res, next) => {
+  try {
+    // Find all enrollments for the student, including the associated programs
+    const enrollments = await Enrollment.find({ student: req.user._id }).populate('programs', 'name');
+
+    if (!enrollments.length) {
+      return res.status(404).json({ message: 'No enrollments found for this student' });
+    }
+
+    // Extract enrollment IDs
+    const enrollmentIds = enrollments.map(enrollment => enrollment._id);
+    // Fetch all scorecards linked to these enrollments
+    const scoreCards = await ScoreCard.find({ enrollment_id: { $in: enrollmentIds } })
+      .populate('skill_area_id', '-_id -createdAt -updatedAt') // Populate skill area details
+      .populate('sub_task_id', '-_id')
+      .select('year month week score description'); // Populate sub-task details
+
+    res.status(200).json({ success: true, scoreCards });
+  } catch (error) {
+    next(error);
+  }
+});
 
 const getStudent = asyncHandler(async (req, res) => {
   //ignore certain fields : password, createdAt, updatedAt, __v,comments
@@ -139,4 +163,4 @@ const logoutStudent = asyncHandler(async (req, res, next) => {
 });
 
 
-export { requestAppointment,loginStudent,logoutStudent,getStudent };
+export { requestAppointment,loginStudent,logoutStudent,getStudent,getStudentReports };

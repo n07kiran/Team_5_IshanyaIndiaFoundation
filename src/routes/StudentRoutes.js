@@ -1,7 +1,8 @@
 import express from 'express';
 import {loginStudent, logoutStudent, 
     requestAppointment,
-    getStudent
+    getStudent,
+    getStudentReports
 } from '../controllers/StudentController.js'
 import validateAppointment from '../middlewares/validateAppointment.js';
 import { verifyJWTStudent } from '../middlewares/auth.middleware.js';
@@ -13,5 +14,6 @@ StudentRouter.post("/login", loginStudent);
 StudentRouter.post("/logout", verifyJWTStudent, logoutStudent);
 StudentRouter.get("/", verifyJWTStudent, getStudent);
 StudentRouter.post("/changePassword", verifyJWTStudent, changePassword);
+StudentRouter.get("/reports",verifyJWTStudent,getStudentReports);
 
 export default StudentRouter;
