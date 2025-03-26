@@ -65,16 +65,14 @@ const getScoreCards = async (req, res) => {
             return res.status(400).json({ message: "Enrollment ID is required" });
         }
 
-        // Fetch the enrollment data without trying to populate student yet
+        // Fetch the enrollment data
         const enrollment = await Enrollment.findById(enrollment_id);
 
         if (!enrollment) {
             return res.status(404).json({ message: "Enrollment not found" });
         }
 
-        // Determine correct student field name from the Enrollment schema
-        // Since we don't have direct access to examine the schema structure,
-        // let's fetch the student separately using the ID from enrollment
+        // Fetch the student using the student field from enrollment
         const student = await Student.findById(enrollment.student)
             .select('name dob age gender contact_info');
 
@@ -82,23 +80,79 @@ const getScoreCards = async (req, res) => {
             return res.status(404).json({ message: "Student not found" });
         }
 
-        // Fetch all scorecards for this enrollment
+        // Fetch all scorecards for this enrollment with more detailed population
         const scoreCards = await ScoreCard.find({ enrollment_id })
             .populate({
                 path: 'skill_area_id',
-                select: 'name description program_id'
+                select: 'name description program_id',
+                populate: {
+                    path: 'program_id',
+                    select: 'name description'
+                }
             })
             .populate({
                 path: 'sub_task_id',
                 select: 'name description skill_area_id'
             })
-            .select('_id skill_area_id sub_task_id year month week score description');
+            .select('_id skill_area_id sub_task_id year month week score description')
+            .sort({ year: -1, month: -1, week: -1 }); // Sort by date descending
+
+        // Create a map to hold ordered month values for proper comparison
+        const monthOrder = {
+            "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5,
+            "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11
+        };
+
+        // Sort the scoreCards manually by program, skill area, subtask, and then date descending
+        const sortedScoreCards = [...scoreCards].sort((a, b) => {
+            // First sort by program name
+            const programNameA = a.skill_area_id?.program_id?.name || "";
+            const programNameB = b.skill_area_id?.program_id?.name || "";
+            
+            if (programNameA !== programNameB) {
+                return programNameA.localeCompare(programNameB);
+            }
+            
+            // Then sort by skill area name
+            const skillAreaNameA = a.skill_area_id?.name || "";
+            const skillAreaNameB = b.skill_area_id?.name || "";
+            
+            if (skillAreaNameA !== skillAreaNameB) {
+                return skillAreaNameA.localeCompare(skillAreaNameB);
+            }
+            
+            // Then sort by sub task name
+            const subTaskNameA = a.sub_task_id?.name || "";
+            const subTaskNameB = b.sub_task_id?.name || "";
+            
+            if (subTaskNameA !== subTaskNameB) {
+                return subTaskNameA.localeCompare(subTaskNameB);
+            }
+            
+            // Then sort by year (descending)
+            if (a.year !== b.year) {
+                return b.year - a.year;
+            }
+            
+            // Then sort by month (descending)
+            const monthValueA = monthOrder[a.month];
+            const monthValueB = monthOrder[b.month];
+            
+            if (monthValueA !== monthValueB) {
+                return monthValueB - monthValueA;
+            }
+            
+            // Finally sort by week (descending)
+            return b.week - a.week;
+        });
 
         // Prepare response data
         const responseData = {
             student: student,
-            scoreCards: scoreCards
+            scoreCards: sortedScoreCards
         };
+
+        // console.log(responseData);
 
         // Return the scorecards data
         return res.status(200).json(
@@ -295,6 +349,8 @@ const generateReport = async (req, res) => {
             subTasks: subTasks,
             scoreCards: scoreCards
         };
+
+        console.log(reportData);
 
         // Return the report data
         return res.status(200).json(
