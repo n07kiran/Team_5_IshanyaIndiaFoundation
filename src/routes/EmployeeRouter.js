@@ -9,7 +9,7 @@ import { loginEmployee, logoutEmployee,
 import { verifyJWTEmployee } from "../middlewares/auth.middleware.js";
 import { updateAppointment } from "../controllers/admin.controller.js";
 import { changePassword } from "../controllers/AuthController.js";
-import { getFullEnrollment, addReport } from "../controllers/StudentReportsControllers.js";
+import { getFullEnrollment, addReport, getScoreCards } from "../controllers/StudentReportsControllers.js";
 
 const EmployeeRouter = Router();
 
@@ -35,5 +35,6 @@ EmployeeRouter.post("/changePassword", verifyJWTEmployee, changePassword);
 //reports
 EmployeeRouter.get("/SkilleAreaAndSubtaks/:enrollmentId",verifyJWTEmployee,getFullEnrollment)
 EmployeeRouter.post("/scoreCard",verifyJWTEmployee,addReport);
+EmployeeRouter.get("/scoreCards/:enrollment_id",verifyJWTEmployee,getScoreCards);
 
 export default EmployeeRouter;

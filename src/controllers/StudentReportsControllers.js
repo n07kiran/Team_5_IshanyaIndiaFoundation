@@ -55,6 +55,62 @@ const getFullEnrollment = async (req, res) => {
 
 };
 
+const getScoreCards = async (req, res) => {
+    try {
+        // Extract enrollment_id from query parameters
+        const { enrollment_id } = req.params;
+
+        // Validate if enrollment_id is provided
+        if (!enrollment_id) {
+            return res.status(400).json({ message: "Enrollment ID is required" });
+        }
+
+        // Fetch the enrollment data without trying to populate student yet
+        const enrollment = await Enrollment.findById(enrollment_id);
+
+        if (!enrollment) {
+            return res.status(404).json({ message: "Enrollment not found" });
+        }
+
+        // Determine correct student field name from the Enrollment schema
+        // Since we don't have direct access to examine the schema structure,
+        // let's fetch the student separately using the ID from enrollment
+        const student = await Student.findById(enrollment.student)
+            .select('name dob age gender contact_info');
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        // Fetch all scorecards for this enrollment
+        const scoreCards = await ScoreCard.find({ enrollment_id })
+            .populate({
+                path: 'skill_area_id',
+                select: 'name description program_id'
+            })
+            .populate({
+                path: 'sub_task_id',
+                select: 'name description skill_area_id'
+            })
+            .select('_id skill_area_id sub_task_id year month week score description');
+
+        // Prepare response data
+        const responseData = {
+            student: student,
+            scoreCards: scoreCards
+        };
+
+        // Return the scorecards data
+        return res.status(200).json(
+            new ApiResponse(200, responseData, "ScoreCards fetched successfully")
+        );
+        
+    } catch (error) {
+        console.error("Error fetching scorecards:", error);
+        throw new ApiError(error.message || "Failed to fetch scorecards", error.statusCode || 500);
+    }
+};
+
 const addReport = async (req, res) => {
     try {
         // Extracting ScoreCard details from req.body
@@ -123,4 +179,132 @@ const addReport = async (req, res) => {
         throw new ApiError(error.message, error.statusCode);
     }
 }
-export { getFullEnrollment, addReport};
+
+const generateReport = async (req, res) => {
+    try {
+        // Extract query parameters from req.body
+        const { 
+            enrollment_id, 
+            startMonth, 
+            endMonth, 
+            startYear = new Date().getFullYear(), 
+            endYear = new Date().getFullYear() 
+        } = req.body;
+
+        // Validate required parameters
+        if (!enrollment_id) {
+            return res.status(400).json({ message: "Enrollment ID is required" });
+        }
+
+        if (!startMonth || !endMonth) {
+            return res.status(400).json({ message: "Start month and end month are required" });
+        }
+
+        // Validate month values
+        const validMonths = ["January", "February", "March", "April", "May", "June", 
+                            "July", "August", "September", "October", "November", "December"];
+        
+        if (!validMonths.includes(startMonth) || !validMonths.includes(endMonth)) {
+            return res.status(400).json({ message: "Invalid month values" });
+        }
+
+        // Fetch enrollment details with populated student, program, and employee data
+        const enrollment = await Enrollment.findById(enrollment_id)
+            .populate({
+                path: 'student_id',
+                select: 'name dob age gender contact_info'
+            })
+            .populate({
+                path: 'programs',
+                select: 'name description'
+            })
+            .populate({
+                path: 'employee_id',
+                select: 'name designation'
+            });
+
+        if (!enrollment) {
+            return res.status(404).json({ message: "Enrollment not found" });
+        }
+
+        // Get program IDs from enrollment
+        const programIds = enrollment.programs.map(program => program._id);
+
+        // Find skill areas that belong to these programs
+        const skillAreas = await SkillArea.find({ program_id: { $in: programIds } })
+            .select('_id name program_id');
+
+        // Find sub tasks that belong to these skill areas
+        const skillAreaIds = skillAreas.map(area => area._id);
+        const subTasks = await SubTask.find({ skill_area_id: { $in: skillAreaIds } })
+            .select('_id name skill_area_id');
+
+        // Create a month index lookup for comparison
+        const monthIndex = {};
+        validMonths.forEach((month, index) => {
+            monthIndex[month] = index;
+        });
+
+        // Find scorecards for this enrollment that match the date range
+        // and belong to the relevant skill areas or sub tasks
+        const scoreCards = await ScoreCard.find({
+            enrollment_id: enrollment_id,
+            $or: [
+                { skill_area_id: { $in: skillAreaIds } },
+                { sub_task_id: { $in: subTasks.map(task => task._id) } }
+            ],
+            $and: [
+                // Handle same year case
+                {
+                    $or: [
+                        // Start and end in same year
+                        {
+                            year: startYear,
+                            month: { 
+                                $gte: startMonth, 
+                                $lte: startYear === endYear ? endMonth : "December" 
+                            }
+                        },
+                        // Different years
+                        {
+                            year: endYear,
+                            month: { 
+                                $gte: startYear === endYear ? startMonth : "January", 
+                                $lte: endMonth 
+                            }
+                        },
+                        // Years in between
+                        {
+                            year: { $gt: startYear, $lt: endYear }
+                        }
+                    ]
+                }
+            ]
+        }).populate('skill_area_id sub_task_id');
+
+        // Format and prepare the report data
+        const reportData = {
+            student: enrollment.student_id,
+            employee: enrollment.employee_id,
+            programs: enrollment.programs,
+            dateRange: {
+                start: { month: startMonth, year: startYear },
+                end: { month: endMonth, year: endYear }
+            },
+            skillAreas: skillAreas,
+            subTasks: subTasks,
+            scoreCards: scoreCards
+        };
+
+        // Return the report data
+        return res.status(200).json(
+            new ApiResponse(200, reportData, "Report generated successfully")
+        );
+
+    } catch (error) {
+        console.error("Error generating report:", error);
+        throw new ApiError(error.message || "Failed to generate report", error.statusCode || 500);
+    }
+};
+
+export { getFullEnrollment, addReport, generateReport, getScoreCards };
