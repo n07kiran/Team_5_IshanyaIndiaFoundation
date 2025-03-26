@@ -21,6 +21,105 @@ import {
   newStudentWelcome
 } from "../utils/emailTemplates.js";
 import { DEFAULT_PASSWORD } from "../constants.js";
+import { EmployeeDocument } from "../models/EmployeeDoc.js";
+import { Document } from "../models/Documents.js";
+
+const getDocumentTypes=asyncHandler(async(req,res,next)=>{
+    const documentTypes=await Document.find({});
+    return res.status(200).json({success:true,documentTypes});
+})
+
+const getEmployeeDocuments=asyncHandler(async(req,res,next)=>{
+    const {employeeId}=req.params;
+    const employeeDocuments=await EmployeeDocument.find({employeeId})
+    .populate("documentType", "name")
+    .select("-createdAt -updatedAt -__v -fileName");
+    
+    return res.status(200).json({success:true,employeeDocuments});
+})
+
+
+const addEmployeeDocument = asyncHandler(async(req, res, next) => {
+    const { employeeId } = req.body;
+    const documents = req.files; // Array of uploaded files
+
+    if(!documents || documents.length === 0) {
+        return res.status(400).json({success: false, message: "Documents are required"});
+    }
+    
+    if(!employeeId) {
+        return res.status(400).json({success: false, message: "Employee ID is required"});
+    }
+    
+    // Process all uploaded documents
+    const uploadedDocuments = [];
+    const errors = [];
+    
+    // Process each document in parallel
+    const uploadPromises = documents.map(async (document) => {
+        try {
+            // Get document type for this file
+            const documentTypeId = document.fieldname;
+            
+            if(!documentTypeId) {
+                errors.push(`No document type specified for ${document.originalname}`);
+                return null;
+            }
+            
+            // Validate document type
+            const documentTypeExists = await Document.findById(documentTypeId);
+            if(!documentTypeExists) {
+                errors.push(`Invalid document type for ${document.originalname}`);
+                return null;
+            }
+            
+            const uploadResponse = await uploadOnCloudinary(document.path);
+            if(!uploadResponse) {
+                errors.push(`Failed to upload document: ${document.originalname}`);
+                return null;
+            }
+            
+            const documentUrl = uploadResponse.url;
+            const employeeDocument = await EmployeeDocument.create({
+                employeeId,
+                documentType: documentTypeId,
+                publicUrl: documentUrl,
+                fileName: document.originalname
+            });
+            
+            return {
+                id: employeeDocument._id,
+                documentType: documentTypeId,
+                url: documentUrl,
+                name: document.originalname
+            };
+        } catch (error) {
+            errors.push(`Error processing ${document.originalname}: ${error.message}`);
+            return null;
+        }
+    });
+    
+    // Wait for all uploads to complete
+    const results = await Promise.all(uploadPromises);
+    
+    // Filter out failed uploads
+    const successfulUploads = results.filter(result => result !== null);
+    
+    if(successfulUploads.length === 0) {
+        return res.status(500).json({
+            success: false, 
+            message: "All document uploads failed",
+            errors
+        });
+    }
+    
+    return res.status(200).json({
+        success: true, 
+        message: `${successfulUploads.length} documents uploaded successfully`,
+        documents: successfulUploads,
+        errors: errors.length > 0 ? errors : undefined
+    });
+});
 
 const deleteEnrollment=asyncHandler(async(req,res,next)=>{
     const {_id}=req.body;
@@ -1014,5 +1113,8 @@ export {
     getJobApplications,
     updateJobApplication,
     updateEmployee,
-    deleteEnrollment
+    deleteEnrollment,
+    addEmployeeDocument,
+    getDocumentTypes,
+    getEmployeeDocuments
 };
