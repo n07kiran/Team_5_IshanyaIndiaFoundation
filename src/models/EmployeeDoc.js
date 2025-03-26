@@ -9,10 +9,10 @@ const employeeDocumentSchema = new mongoose.Schema({
     },
     documentType: {
         type: Schema.Types.ObjectId,
-        ref: "Documents", // References Document model
+        ref: "Document", // References Document model
         required: true
     },
-    filePath: {
+    publicUrl: {
         type: String,
         required: true,
         trim: true
@@ -26,4 +26,4 @@ const employeeDocumentSchema = new mongoose.Schema({
 
 const EmployeeDocument = mongoose.model("EmployeeDocument", employeeDocumentSchema);
 
-export default EmployeeDocument;
+export {EmployeeDocument};
