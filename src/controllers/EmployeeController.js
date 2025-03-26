@@ -10,8 +10,73 @@ import PDFDocument from "pdfkit";
 import { cloudinary } from "../utils/cloudinary.js";
 import { StudentDocument } from "../models/StudentDoc.js";
 import { Student } from "../models/Student.js";
+import { MomentOfDay } from "../models/MomentOfDay.js";
+import { upload } from "../middlewares/multer.middleware.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+const getMomentOfDay = asyncHandler(async(req,res,next)=>{
+    const momentOfDay=await MomentOfDay.find({})
+    .populate("studentId", "name")
+    .populate("employeeId", "name")
+    .select("-createdAt -updatedAt -__v -fileName");
+    // sort by date in descending order
+    momentOfDay.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    
+    return res.status(200).json(new ApiResponse(200, { momentOfDay }, "Moment of day fetched successfully"));
+})
+
+const addMomentOfDay = asyncHandler(async(req,res,next)=>{
+    try {
+        const {date, caption, status} = req.body;
+        let studentId = req.body.studentId || []; // Default to empty array if not provided
+        let employeeId = req.body.employeeId;
+
+        // make it array
+        if(!Array.isArray(studentId)){
+            studentId = studentId ? [studentId] : [];
+        }
+        
+        if(!Array.isArray(employeeId)){
+            employeeId = [req.user._id];
+        }
+
+
+
+        const moment = req.file;
+        let response;
+        if(moment){
+            response = await uploadOnCloudinary(moment.path);
+        }
+        if(!response){
+            throw new ApiError(400, "Failed to upload moment");
+        }
+
+        // console.log(response);
+        const publicUrl = response.url;
+
+        const momentOfDay = new MomentOfDay({
+            studentId,
+            employeeId,
+            date,
+            publicUrl,
+            caption, // Optional
+            status
+        });
+        
+        await momentOfDay.save();
+        return res
+                .status(200)
+                .json(new ApiResponse(200, { momentOfDay }, "Moment of day added successfully"));
+
+    } catch(error) {
+        console.error("Database save error:", error.message);
+        throw new ApiError(400, `Failed to add moment of day: ${error.message}`);
+    }
+})
+
 
 const uploadReport = asyncHandler(async (req, res) => {
+
     try {
         const { enrollmentId, reportDate, weekNumber, categories, teacherComments } = req.body;
 
@@ -465,5 +530,7 @@ export {
     getEmployee,
     getEnrollments,
     createJobApplication,
-    uploadReport
+    uploadReport,
+    getMomentOfDay,
+    addMomentOfDay
  };

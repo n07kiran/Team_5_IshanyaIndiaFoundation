@@ -8,6 +8,7 @@ import {upload} from "./middlewares/multer.middleware.js"
 import {uploadOnCloudinary} from "./utils/cloudinary.js"
 import {sendEmail} from "./utils/Emails.js"
 import { authRouter } from "./routes/authRouter.js";
+import { getMomentOfDay } from "./controllers/EmployeeController.js";
 
 const app = express()
 
@@ -54,6 +55,8 @@ app.get("/",(req,res)=>{
 app.get("/api/v1/test",(req,res)=>{
     res.send("At route /api/v1/test")
 })
+
+app.get("/api/v1/MomentOfDay",getMomentOfDay)
 
 // Test email
 app.get("/api/v1/testEmail",async (req,res)=>{

@@ -128,10 +128,7 @@ const deleteEnrollment=asyncHandler(async(req,res,next)=>{
         if(!enroll){
             return res.status(404).json({ success: false, message: "Enrollment not found" });
         }
-        return res.status(200).json({
-            success: true,
-            message: "Enrollment deleted successfully",
-        })
+        return res.status(200).json(new ApiResponse(200, { enroll }, "Enrollment deleted successfully"));
     } catch (error) {
         console.error("Error deleting Enrollment:", error);
         return res.status(500).json({
